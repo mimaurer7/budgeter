@@ -27,12 +27,24 @@ export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
 }
 
+// Converts MM/DD/YYYY, M/D/YYYY, or already-correct YYYY-MM-DD → YYYY-MM-DD
+export function normalizeDate(raw: string): string {
+  const slash = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (slash) {
+    const [, m, d, y] = slash
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw
+  const parsed = new Date(raw)
+  if (!isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10)
+  return raw
+}
+
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
+  const normalized = normalizeDate(dateStr)
+  const d = new Date(normalized + 'T00:00:00')
+  if (isNaN(d.getTime())) return dateStr
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 export function currentMonth(): string {

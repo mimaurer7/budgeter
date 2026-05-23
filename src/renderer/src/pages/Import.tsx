@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Transaction } from '../types'
 import { useAppStore } from '../store/useAppStore'
-import { parseCSV, formatCurrency, formatDate } from '../utils/data'
+import { parseCSV, formatCurrency, formatDate, normalizeDate } from '../utils/data'
 
 interface Props {
   store: ReturnType<typeof useAppStore>
@@ -43,7 +43,7 @@ export default function Import({ store }: Props) {
       let skippedCount = 0
 
       for (const row of rows) {
-        const date = row['Date']?.trim()
+        const date = normalizeDate(row['Date']?.trim() ?? '')
         const description = row['Description']?.trim()
         const debit = parseAmount(row['Debit'])
         const credit = parseAmount(row['Credit'])
