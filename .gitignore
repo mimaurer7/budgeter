@@ -43,3 +43,10 @@ coverage/
 # Temp files
 *.tmp
 *.temp
+
+# Bank/financial data — never commit these
+*.csv
+*.json
+!package.json
+!package-lock.json
+!tsconfig*.json
