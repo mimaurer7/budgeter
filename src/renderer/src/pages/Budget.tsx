@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAppStore } from '../store/useAppStore'
-import { formatCurrency, currentMonth } from '../utils/data'
+import { formatCurrency, currentMonth, monthKey } from '../utils/data'
 
 interface Props {
   store: ReturnType<typeof useAppStore>
@@ -12,7 +12,7 @@ export default function Budget({ store }: Props) {
   const [editCat, setEditCat] = useState<string | null>(null)
   const [limitInput, setLimitInput] = useState('')
 
-  const monthTxns = data.transactions.filter((t) => t.date.startsWith(month) && t.type === 'expense')
+  const monthTxns = data.transactions.filter((t) => monthKey(t.date) === month && t.type === 'expense')
   const spendByCategory: Record<string, number> = {}
   monthTxns.forEach((t) => {
     spendByCategory[t.category] = (spendByCategory[t.category] ?? 0) + t.amount

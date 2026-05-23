@@ -5,7 +5,7 @@ import {
   LineChart, Line
 } from 'recharts'
 import { useAppStore } from '../store/useAppStore'
-import { formatCurrency, currentMonth } from '../utils/data'
+import { formatCurrency, currentMonth, monthKey } from '../utils/data'
 
 interface Props {
   store: ReturnType<typeof useAppStore>
@@ -18,7 +18,7 @@ export default function Charts({ store }: Props) {
   const pieData = useMemo(() => {
     const byCategory: Record<string, number> = {}
     data.transactions
-      .filter((t) => t.type === 'expense' && t.date.startsWith(month))
+      .filter((t) => t.type === 'expense' && monthKey(t.date) === month)
       .forEach((t) => { byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount })
     return Object.entries(byCategory)
       .map(([name, value]) => ({ name, value }))
@@ -30,7 +30,7 @@ export default function Charts({ store }: Props) {
     if (goals.length === 0) return []
     const spendByCategory: Record<string, number> = {}
     data.transactions
-      .filter((t) => t.type === 'expense' && t.date.startsWith(month))
+      .filter((t) => t.type === 'expense' && monthKey(t.date) === month)
       .forEach((t) => { spendByCategory[t.category] = (spendByCategory[t.category] ?? 0) + t.amount })
     return goals.map((g) => ({
       category: g.category,
@@ -42,7 +42,7 @@ export default function Charts({ store }: Props) {
   const trendData = useMemo(() => {
     const months: Record<string, { income: number; expenses: number }> = {}
     data.transactions.forEach((t) => {
-      const m = t.date.slice(0, 7)
+      const m = monthKey(t.date)
       if (!months[m]) months[m] = { income: 0, expenses: 0 }
       if (t.type === 'income') months[m].income += t.amount
       else months[m].expenses += t.amount

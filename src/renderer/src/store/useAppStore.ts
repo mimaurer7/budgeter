@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AppData, Transaction, BudgetGoal, Category } from '../types'
-import { EMPTY_APP_DATA, generateId } from '../utils/data'
+import { EMPTY_APP_DATA, generateId, normalizeDate } from '../utils/data'
 
 declare global {
   interface Window {
@@ -24,7 +24,16 @@ export function useAppStore() {
       setDataPath(path)
       const saved = await window.api.readData(path)
       if (saved) {
-        setData({ ...EMPTY_APP_DATA, ...saved })
+        const migrated: AppData = {
+          ...EMPTY_APP_DATA,
+          ...saved,
+          transactions: (saved.transactions ?? []).map((t) => ({
+            ...t,
+            date: normalizeDate(t.date)
+          }))
+        }
+        setData(migrated)
+        await window.api.writeData(path, migrated)
       }
       setLoading(false)
     }

@@ -47,9 +47,27 @@ export function formatDate(dateStr: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+export function monthKey(dateStr: string): string {
+  return normalizeDate(dateStr).slice(0, 7)
+}
+
 export function currentMonth(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+export function guessCategory(description: string): string {
+  const d = description.toLowerCase()
+  if (/starbucks|mcdonald|burger|restaurant|dining|smoothie|sonic|dairy.queen|pizza|subway|dunkin|taco|chipotle|deli|cafe|coffee|donut|panera|chick.fil|popeyes|wendy|arby|kfc/.test(d)) return 'Food & Dining'
+  if (/target|walmart|amazon|costco|sam.s club|dollar|tj.maxx|marshalls|macy|kohl|best.buy|home.depot|lowes|walgreen|cvs|rite.aid/.test(d)) return 'Shopping'
+  if (/shell|bp|exxon|chevron|mobil|speedway|kwik.trip|gas|fuel|auto|midas|jiffy|car.wash/.test(d)) return 'Transportation'
+  if (/netflix|spotify|hulu|disney|hbo|apple.com\/bill|google.play|steam|xbox|playstation|ticketmaster|amc/.test(d)) return 'Entertainment'
+  if (/deposit|payroll|direct dep|salary|paycheck|dte deposit/.test(d)) return 'Income'
+  if (/transfer|savings|zelle|venmo|paypal/.test(d)) return 'Savings'
+  if (/electric|consumers|dte|xcel|at&t|verizon|comcast|spectrum|t-mobile|internet|phone bill|water bill|gas bill/.test(d)) return 'Utilities'
+  if (/doctor|hospital|clinic|pharmacy|dental|vision|health|urgent care|medical/.test(d)) return 'Healthcare'
+  if (/rent|mortgage|hoa|apartment/.test(d)) return 'Housing'
+  return 'Other'
 }
 
 export function parseCSV(csvText: string): Record<string, string>[] {

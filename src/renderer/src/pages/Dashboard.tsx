@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useAppStore } from '../store/useAppStore'
-import { formatCurrency, currentMonth, formatDate } from '../utils/data'
+import { formatCurrency, currentMonth, formatDate, monthKey } from '../utils/data'
 
 interface Props {
   store: ReturnType<typeof useAppStore>
@@ -8,10 +8,20 @@ interface Props {
 
 export default function Dashboard({ store }: Props) {
   const { data } = store
-  const month = currentMonth()
+
+  const mostRecentMonth = useMemo(() => {
+    if (data.transactions.length === 0) return currentMonth()
+    return data.transactions
+      .map((t) => monthKey(t.date))
+      .sort()
+      .at(-1)!
+  }, [data.transactions])
+
+  const [month, setMonth] = useState<string | null>(null)
+  const activeMonth = month ?? mostRecentMonth
 
   const stats = useMemo(() => {
-    const monthTxns = data.transactions.filter((t) => t.date.startsWith(month))
+    const monthTxns = data.transactions.filter((t) => monthKey(t.date) === activeMonth)
     const income = monthTxns.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
     const expenses = monthTxns.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
     const net = income - expenses
@@ -19,23 +29,31 @@ export default function Dashboard({ store }: Props) {
     const byCategory: Record<string, number> = {}
     monthTxns
       .filter((t) => t.type === 'expense')
-      .forEach((t) => {
-        byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount
-      })
+      .forEach((t) => { byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount })
 
     const recent = [...data.transactions]
-      .sort((a, b) => b.date.localeCompare(a.date))
+      .sort((a, b) => monthKey(b.date).localeCompare(monthKey(a.date)) || b.date.localeCompare(a.date))
       .slice(0, 5)
 
     return { income, expenses, net, byCategory, recent }
-  }, [data, month])
+  }, [data, activeMonth])
+
+  const monthLabel = new Date(activeMonth + '-02').toLocaleString('en-US', { month: 'long', year: 'numeric' })
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-      <p className="text-gray-400 text-sm mb-8">
-        {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-      </p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
+          <p className="text-gray-400 text-sm">{monthLabel}</p>
+        </div>
+        <input
+          type="month"
+          value={activeMonth}
+          onChange={(e) => setMonth(e.target.value)}
+          className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+        />
+      </div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
         <StatCard label="Income" value={formatCurrency(stats.income)} color="text-green-400" />
@@ -51,14 +69,14 @@ export default function Dashboard({ store }: Props) {
         <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
           <h2 className="font-semibold mb-4 text-gray-200">Top Spending Categories</h2>
           {Object.keys(stats.byCategory).length === 0 ? (
-            <p className="text-gray-500 text-sm">No expenses this month yet.</p>
+            <p className="text-gray-500 text-sm">No expenses for this month.</p>
           ) : (
             <ul className="space-y-2">
               {Object.entries(stats.byCategory)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5)
                 .map(([cat, amt]) => {
-                  const goal = data.budgetGoals.find((g) => g.category === cat && g.month === month)
+                  const goal = data.budgetGoals.find((g) => g.category === cat && g.month === activeMonth)
                   const pct = goal ? Math.min((amt / goal.monthlyLimit) * 100, 100) : null
                   return (
                     <li key={cat}>

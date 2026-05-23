@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Transaction } from '../types'
 import { useAppStore } from '../store/useAppStore'
-import { parseCSV, formatCurrency, formatDate, normalizeDate } from '../utils/data'
+import { parseCSV, formatCurrency, formatDate, normalizeDate, guessCategory } from '../utils/data'
 
 interface Props {
   store: ReturnType<typeof useAppStore>
@@ -51,9 +51,9 @@ export default function Import({ store }: Props) {
         if (!date || !description) { skippedCount++; continue }
 
         if (credit > 0) {
-          parsed.push({ date, description, amount: credit, type: 'income', category: 'Other' })
+          parsed.push({ date, description, amount: credit, type: 'income', category: guessCategory(description) })
         } else if (debit !== 0) {
-          parsed.push({ date, description, amount: Math.abs(debit), type: 'expense', category: 'Other' })
+          parsed.push({ date, description, amount: Math.abs(debit), type: 'expense', category: guessCategory(description) })
         } else {
           skippedCount++
         }
