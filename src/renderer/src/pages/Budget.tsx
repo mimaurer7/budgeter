@@ -95,7 +95,17 @@ export default function Budget({ store }: Props) {
     setExpandedCategory(prev => prev === catName ? null : catName)
   }
 
-  const visibleCategories = data.categories.filter((c) => c.name !== 'Income' && !c.hidden && !c.transfer)
+  const visibleCategories = data.categories.filter((c) =>
+    c.name !== 'Income' && !c.hidden && (!c.transfer || c.name === 'Savings Withdrawal')
+  )
+
+  const withdrawnByCategory = useMemo(() => {
+    const map: Record<string, number> = {}
+    data.transactions
+      .filter((t) => monthKey(t.date) === month && t.type === 'income' && transferCats.has(t.category))
+      .forEach((t) => { map[t.category] = (map[t.category] ?? 0) + t.amount })
+    return map
+  }, [data.transactions, month, transferCats])
   const allManageCategories = data.categories.filter((c) => c.name !== 'Income')
   const allCategoryNames = data.categories.map((c) => c.name)
   const uncategorizedCount = (txnsByCategory['Uncategorized'] ?? []).filter(t => t.type === 'expense').length
@@ -392,9 +402,12 @@ export default function Budget({ store }: Props) {
         )}
 
         {visibleCategories.map((cat, i) => {
-          const goal = goals.find((g) => g.category === cat.name)
+          const isTransferRow = cat.transfer
+          const goal = isTransferRow ? undefined : goals.find((g) => g.category === cat.name)
           const budgeted = goal?.monthlyLimit ?? 0
-          const spent = spentByCategory[cat.name] ?? 0
+          const spent = isTransferRow
+            ? (withdrawnByCategory[cat.name] ?? 0)
+            : (spentByCategory[cat.name] ?? 0)
           const remaining = budgeted - spent
           const pct = budgeted > 0 ? Math.min((spent / budgeted) * 100, 100) : 0
           const isOver = budgeted > 0 && spent > budgeted
@@ -427,7 +440,9 @@ export default function Budget({ store }: Props) {
                 </div>
 
                 <div className="text-right">
-                  {isEditing ? (
+                  {isTransferRow ? (
+                    <span className="text-sm" style={{ color: '#aeadcc' }}>—</span>
+                  ) : isEditing ? (
                     <div className="flex justify-end items-center gap-1.5">
                       <span className="text-xs" style={{ color: '#8a89a8' }}>$</span>
                       <input type="number" value={goalInput} min="0" step="1" autoFocus
@@ -449,7 +464,8 @@ export default function Budget({ store }: Props) {
                   )}
                 </div>
 
-                <div className="text-right text-sm" style={{ color: spent > 0 ? '#5a5978' : '#aeadcc' }}>
+                <div className="text-right text-sm"
+                  style={{ color: spent > 0 ? (isTransferRow ? '#7c9cc0' : '#5a5978') : '#aeadcc' }}>
                   {spent > 0 ? formatCurrency(spent) : '—'}
                 </div>
 
