@@ -32,8 +32,7 @@ export function useAppStore() {
             hidden: false,
             custom: false,
             ...c,
-            // Ensure transfer flag is set correctly on the Transfer category
-            transfer: c.name === 'Transfer' ? true : (c.transfer ?? false),
+            transfer: ['Transfer', 'Savings Withdrawal'].includes(c.name) ? true : (c.transfer ?? false),
             savings: ['Savings', 'Emergency Fund', 'Investments'].includes(c.name) ? true : (c.savings ?? false),
           })),
           ...newDefaults,

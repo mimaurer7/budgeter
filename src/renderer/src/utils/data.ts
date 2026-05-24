@@ -21,6 +21,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-pets',         name: 'Pets',             color: '#fbbf24' },
   { id: 'cat-transfer',     name: 'Transfer',         color: '#94a3b8', transfer: true },
   { id: 'cat-savings',      name: 'Savings',          color: '#14b8a6', savings: true },
+  { id: 'cat-savings-wd',   name: 'Savings Withdrawal', color: '#7c9cc0', transfer: true },
   { id: 'cat-emergency',    name: 'Emergency Fund',   color: '#2dd4bf', savings: true },
   { id: 'cat-investments',  name: 'Investments',      color: '#34d399', savings: true },
   { id: 'cat-debt',         name: 'Debt Payments',    color: '#f87171' },
@@ -79,7 +80,9 @@ export function guessCategory(description: string): string {
   // Income — check before utilities so "dte ... payroll" hits here
   if (/payroll|direct dep|active payroll|salary|paycheck/.test(d)) return 'Income'
   if (/^external deposit|^deposit/.test(d) && !/transfer/.test(d)) return 'Income'
-  // Savings BEFORE transfer so "Transfer to Savings" → Savings budget line, not hidden
+  // Savings withdrawal (money coming FROM savings back to checking) — not real income
+  if (/\bfrom\b.{0,25}\bsav(ings?)?\b/.test(d)) return 'Savings Withdrawal'
+  // Savings deposit BEFORE transfer so "Transfer to Savings" → Savings budget line, not hidden
   if (/\bsavings\b/.test(d)) return 'Savings'
   // Pure internal bank-to-bank transfers — excluded from all calculations
   // Note: Zelle/Venmo/PayPal/CashApp removed here — those are real expenses needing manual categorization

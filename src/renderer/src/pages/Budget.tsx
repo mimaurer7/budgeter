@@ -102,7 +102,7 @@ export default function Budget({ store }: Props) {
 
   const transferTxnsThisMonth = useMemo(() =>
     data.transactions
-      .filter((t) => monthKey(t.date) === month && transferCats.has(t.category))
+      .filter((t) => monthKey(t.date) === month && transferCats.has(t.category) && t.category !== 'Savings Withdrawal')
       .sort((a, b) => b.date.localeCompare(a.date)),
     [data.transactions, month, transferCats]
   )
