@@ -47,10 +47,12 @@ export function useAppStore() {
           savingsBalance: saved.savingsBalance ?? 0,
           categories: mergedCategories,
           transactions: (saved.transactions ?? []).map((t) => {
-            // Only fix the legacy 'Other' label (renamed to 'Uncategorized').
-            // Everything else is trusted as-is — re-guessing here overrides
-            // manual categorizations the user has made.
-            const category = t.category === 'Other' ? 'Uncategorized' : t.category
+            let category = t.category
+            // Fix legacy 'Other' label (renamed to 'Uncategorized')
+            if (category === 'Other') category = 'Uncategorized'
+            // Fix expense transactions wrongly marked Savings Withdrawal —
+            // only income (credits) can be a withdrawal from savings
+            if (category === 'Savings Withdrawal' && t.type === 'expense') category = 'Savings'
             return { ...t, date: normalizeDate(t.date), category }
           })
         }

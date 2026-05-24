@@ -75,14 +75,15 @@ export function currentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
-export function guessCategory(description: string): string {
+export function guessCategory(description: string, type?: 'income' | 'expense'): string {
   const d = description.toLowerCase()
   // Income — check before utilities so "dte ... payroll" hits here
   if (/payroll|direct dep|active payroll|salary|paycheck/.test(d)) return 'Income'
   if (/^external deposit|^deposit/.test(d) && !/transfer/.test(d)) return 'Income'
-  // Savings withdrawal (money coming FROM savings back to checking) — not real income
-  if (/\bfrom\b.{0,25}\bsav(ings?)?\b/.test(d)) return 'Savings Withdrawal'
-  // Savings deposit BEFORE transfer so "Transfer to Savings" → Savings budget line, not hidden
+  // Savings withdrawal — only credit (income) transactions are a pull FROM savings
+  // Debit transactions mentioning savings are deposits TO savings, not withdrawals
+  if (type === 'income' && /\bfrom\b.{0,25}\bsav(ings?)?\b/.test(d)) return 'Savings Withdrawal'
+  // Savings deposit — catches "Transfer to Savings", "SAVINGS XFER", etc.
   if (/\bsavings\b/.test(d)) return 'Savings'
   // Pure internal bank-to-bank transfers — excluded from all calculations
   // Note: Zelle/Venmo/PayPal/CashApp removed here — those are real expenses needing manual categorization

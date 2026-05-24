@@ -55,9 +55,9 @@ export default function Import({ store }: Props) {
         if (!date || !description) { skippedCount++; continue }
 
         if (credit > 0) {
-          parsed.push({ date, description, amount: credit, type: 'income', category: guessCategory(description) })
+          parsed.push({ date, description, amount: credit, type: 'income', category: guessCategory(description, 'income') })
         } else if (debit !== 0) {
-          parsed.push({ date, description, amount: Math.abs(debit), type: 'expense', category: guessCategory(description) })
+          parsed.push({ date, description, amount: Math.abs(debit), type: 'expense', category: guessCategory(description, 'expense') })
         } else {
           skippedCount++
         }
