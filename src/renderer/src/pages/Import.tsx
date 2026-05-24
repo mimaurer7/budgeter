@@ -140,32 +140,34 @@ export default function Import({ store }: Props) {
             <table className="w-full text-xs">
               <thead style={{ borderBottom: '1px solid #eae9f5' }}>
                 <tr className="text-left" style={{ color: '#8a89a8' }}>
-                  <th className="px-4 py-2 font-medium">Date</th>
+                  <th className="px-4 py-2 font-medium w-28">Date</th>
                   <th className="px-4 py-2 font-medium">Description</th>
-                  <th className="px-4 py-2 font-medium">Type</th>
-                  <th className="px-4 py-2 font-medium text-right">Amount</th>
+                  <th className="px-4 py-2 font-medium w-32">Category</th>
+                  <th className="px-4 py-2 font-medium text-right w-28">Amount</th>
                 </tr>
               </thead>
               <tbody>
-                {preview.map((r, i) => (
+                {preview.map((r, i) => {
+                  const catObj = data.categories.find(c => c.name === r.category)
+                  const catColor = catObj?.color ?? '#8a89a8'
+                  return (
                   <tr key={i} style={{ borderBottom: '1px solid #f0eff5' }}>
                     <td className="px-4 py-2" style={{ color: '#8a89a8' }}>{formatDate(r.date)}</td>
                     <td className="px-4 py-2" style={{ color: '#1e1d2e' }}>{r.description}</td>
                     <td className="px-4 py-2">
-                      <span className="px-2 py-0.5 rounded-full text-xs"
-                        style={{
-                          background: r.type === 'income' ? '#f0fdf4' : '#fef2f2',
-                          color: r.type === 'income' ? '#16a34a' : '#dc2626'
-                        }}>
-                        {r.type}
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs"
+                        style={{ background: `${catColor}18`, color: catColor }}>
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: catColor }} />
+                        {r.category}
                       </span>
                     </td>
                     <td className="px-4 py-2 text-right font-medium"
                       style={{ color: r.type === 'income' ? '#16a34a' : '#dc2626' }}>
-                      {formatCurrency(r.amount)}
+                      {r.type === 'income' ? '+' : '-'}{formatCurrency(r.amount)}
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>

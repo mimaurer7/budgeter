@@ -14,7 +14,7 @@ export default function App() {
 
   if (store.loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-950 text-gray-400">
+      <div className="flex h-screen items-center justify-center" style={{ background: '#f5f4f1', color: '#8a89a8' }}>
         Loading...
       </div>
     )

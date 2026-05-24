@@ -223,7 +223,7 @@ export default function Charts({ store }: Props) {
         {/* Monthly savings rate — click a bar to drill in */}
         <div className="card card-glow p-5">
           <h2 className="font-semibold mb-1" style={{ color: '#3c3b58' }}>Monthly Savings Rate</h2>
-          <p className="text-xs mb-4" style={{ color: '#aeadcc' }}>% of income kept · click a bar to see that month's transactions</p>
+          <p className="text-xs mb-4" style={{ color: '#aeadcc' }}>% of income saved · click a bar to see that month's transactions</p>
           {trendData.length === 0 ? (
             <p className="text-sm" style={{ color: '#aeadcc' }}>No data yet.</p>
           ) : (
@@ -318,7 +318,7 @@ export default function Charts({ store }: Props) {
                     {t.category}
                   </span>
                   <span className="text-sm font-semibold shrink-0 w-24 text-right"
-                    style={{ color: t.type === 'income' ? '#16a34a' : '#dc2626' }}>
+                    style={{ color: t.type === 'income' ? '#16a34a' : savingsCats.has(t.category) ? '#0d9488' : '#dc2626' }}>
                     {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                   </span>
                 </div>

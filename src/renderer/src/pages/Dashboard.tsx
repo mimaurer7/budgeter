@@ -119,9 +119,9 @@ export default function Dashboard({ store }: Props) {
         <StatCard label="Spent" value={formatCurrency(monthStats.expenses)} color="#dc2626" accent="stat-expense" />
         <StatCard label="Saved" value={formatCurrency(monthStats.saved)} color="#0d9488" accent="stat-neutral"
           sub={monthStats.income > 0 ? `${Math.round((monthStats.saved / monthStats.income) * 100)}% of income` : undefined} />
-        <StatCard label="Left Over" value={formatCurrency(monthStats.net)}
+        <StatCard label="Left to Assign" value={formatCurrency(monthStats.net)}
           color={monthStats.net < 0 ? '#dc2626' : monthStats.net === 0 ? '#16a34a' : '#d97706'} accent="stat-net"
-          sub={monthStats.net === 0 ? 'Every dollar allocated!' : monthStats.net < 0 ? 'Over budget' : 'Unallocated'} />
+          sub={monthStats.net === 0 ? 'Every dollar has a job!' : monthStats.net < 0 ? 'Over budget' : 'Unallocated'} />
       </div>
 
       {/* ── All-time summary + savings (asymmetric 2:1) ── */}
@@ -132,7 +132,7 @@ export default function Dashboard({ store }: Props) {
             <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#8a89a8' }}>All-Time Overview</p>
             {earliestDate && <span className="text-xs" style={{ color: '#aeadcc' }}>since {earliestDate}</span>}
           </div>
-          <div className="grid grid-cols-4 gap-6 mt-3">
+          <div className="grid grid-cols-4 gap-4 mt-3">
             <div>
               <p className="text-xs mb-1" style={{ color: '#8a89a8' }}>Total Earned</p>
               <p className="text-2xl font-bold" style={{ color: '#16a34a' }}>{formatCurrency(allTime.income)}</p>

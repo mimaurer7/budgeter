@@ -273,7 +273,7 @@ export default function Budget({ store }: Props) {
           style={{ background: '#eff6ff', border: '1px solid #93c5fd' }}
           onClick={() => setShowTransferReview((v) => !v)}>
           <div className="flex items-center gap-3">
-            <span style={{ color: '#2563eb' }}>↔</span>
+            <span style={{ color: '#2563eb' }}>⇆</span>
             <span className="text-sm font-medium" style={{ color: '#1e40af' }}>
               {transferTxnsThisMonth.length} transfer transaction{transferTxnsThisMonth.length !== 1 ? 's' : ''} this month — reassign to budget categories
             </span>
@@ -317,7 +317,7 @@ export default function Budget({ store }: Props) {
       )}
 
       {/* Income / allocation banner */}
-      <div className="card card-glow p-6 mb-6">
+      <div className="card card-glow p-5 mb-6">
         <div className="grid grid-cols-3 gap-8 mb-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#8a89a8' }}>Monthly Income</p>
