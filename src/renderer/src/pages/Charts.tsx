@@ -84,13 +84,23 @@ export default function Charts({ store }: Props) {
       .sort((a, b) => b.date.localeCompare(a.date))
   }, [data.transactions, drillMonth])
 
-  // Drill-down: all-time transactions for a selected merchant
+  // Drill-down: all-time transactions for a selected merchant, grouped by year
   const drillMerchantTxns = useMemo(() => {
     if (!drillMerchant) return []
     return [...data.transactions]
       .filter((t) => t.description === drillMerchant && t.type === 'expense')
       .sort((a, b) => b.date.localeCompare(a.date))
   }, [data.transactions, drillMerchant])
+
+  const drillMerchantByYear = useMemo(() => {
+    const grouped: Record<string, typeof drillMerchantTxns> = {}
+    drillMerchantTxns.forEach((t) => {
+      const yr = t.date.slice(0, 4)
+      if (!grouped[yr]) grouped[yr] = []
+      grouped[yr].push(t)
+    })
+    return Object.entries(grouped).sort((a, b) => b[0].localeCompare(a[0]))
+  }, [drillMerchantTxns])
 
   const colors = data.categories.reduce<Record<string, string>>((acc, c) => {
     acc[c.name] = c.color; return acc
@@ -307,19 +317,36 @@ export default function Charts({ store }: Props) {
                 style={{ color: '#8a89a8', background: '#f0eff8' }}>×</button>
             </div>
             <div className="overflow-y-auto flex-1">
-              {drillMerchantTxns.map((t, i) => (
-                <div key={t.id} className="flex items-center gap-4 px-6 py-3"
-                  style={{ borderBottom: i < drillMerchantTxns.length - 1 ? '1px solid #f0eff5' : 'none' }}>
-                  <span className="text-xs w-20 shrink-0" style={{ color: '#aeadcc' }}>{formatDate(t.date)}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full shrink-0"
-                    style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? '#8a89a8' }}>
-                    {t.category}
-                  </span>
-                  <span className="text-sm font-semibold ml-auto shrink-0" style={{ color: '#dc2626' }}>
-                    -{formatCurrency(t.amount)}
-                  </span>
-                </div>
-              ))}
+              {drillMerchantByYear.map(([year, txns], yi) => {
+                const yearTotal = txns.reduce((s, t) => s + t.amount, 0)
+                return (
+                  <div key={year}>
+                    {/* Year header */}
+                    <div className="flex items-center justify-between px-6 py-2 sticky top-0"
+                      style={{ background: '#f5f4f8', borderBottom: '1px solid #eae9f5', borderTop: yi > 0 ? '1px solid #eae9f5' : 'none' }}>
+                      <span className="text-xs font-bold uppercase tracking-wide" style={{ color: '#6366f1' }}>{year}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs" style={{ color: '#aeadcc' }}>{txns.length} visit{txns.length !== 1 ? 's' : ''}</span>
+                        <span className="text-sm font-bold" style={{ color: '#dc2626' }}>{formatCurrency(yearTotal)}</span>
+                      </div>
+                    </div>
+                    {/* Transactions for this year */}
+                    {txns.map((t, i) => (
+                      <div key={t.id} className="flex items-center gap-4 px-6 py-2.5"
+                        style={{ borderBottom: i < txns.length - 1 ? '1px solid #f0eff5' : 'none' }}>
+                        <span className="text-xs w-20 shrink-0" style={{ color: '#aeadcc' }}>{formatDate(t.date)}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full shrink-0"
+                          style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? '#8a89a8' }}>
+                          {t.category}
+                        </span>
+                        <span className="text-sm font-semibold ml-auto shrink-0" style={{ color: '#dc2626' }}>
+                          -{formatCurrency(t.amount)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>
