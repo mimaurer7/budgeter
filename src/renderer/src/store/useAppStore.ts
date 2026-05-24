@@ -13,10 +13,13 @@ declare global {
   }
 }
 
+export type SaveStatus = 'saved' | 'saving' | 'error'
+
 export function useAppStore() {
   const [data, setData] = useState<AppData>(EMPTY_APP_DATA)
   const [dataPath, setDataPath] = useState<string>('')
   const [loading, setLoading] = useState(true)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved')
 
   useEffect(() => {
     async function load() {
@@ -63,8 +66,14 @@ export function useAppStore() {
     async (next: AppData) => {
       setData(next)
       if (!dataPath) return
+      setSaveStatus('saving')
       const result = await window.api.writeData(dataPath, next)
-      if (!result?.success) console.error('Save failed:', result?.error)
+      if (result?.success) {
+        setSaveStatus('saved')
+      } else {
+        console.error('Save failed:', result?.error)
+        setSaveStatus('error')
+      }
     },
     [dataPath]
   )
@@ -179,6 +188,8 @@ export function useAppStore() {
     [data, save]
   )
 
+  const manualSave = useCallback(() => save(data), [data, save])
+
   const copyBudgetFromLastMonth = useCallback(
     (month: string) => {
       // Find previous month
@@ -202,6 +213,8 @@ export function useAppStore() {
   return {
     data,
     loading,
+    saveStatus,
+    manualSave,
     addTransaction,
     updateTransaction,
     deleteTransaction,
