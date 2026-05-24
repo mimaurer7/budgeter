@@ -27,15 +27,20 @@ export default function Charts({ store }: Props) {
     [data.categories]
   )
 
+  const savingsCats = useMemo(() =>
+    new Set(data.categories.filter((c) => c.savings).map((c) => c.name)),
+    [data.categories]
+  )
+
   const pieData = useMemo(() => {
     const byCategory: Record<string, number> = {}
     data.transactions
-      .filter((t) => t.type === 'expense' && monthKey(t.date) === month && !transferCats.has(t.category))
+      .filter((t) => t.type === 'expense' && monthKey(t.date) === month && !transferCats.has(t.category) && !savingsCats.has(t.category))
       .forEach((t) => { byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount })
     return Object.entries(byCategory)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-  }, [data, month, transferCats])
+  }, [data, month, transferCats, savingsCats])
 
   const budgetBarData = useMemo(() => {
     const goals = data.budgetGoals.filter((g) => g.month === month)
@@ -47,18 +52,19 @@ export default function Charts({ store }: Props) {
     return goals.map((g) => ({
       category: g.category,
       Budget: g.monthlyLimit,
-      Spent: spendByCategory[g.category] ?? 0
+      Actual: spendByCategory[g.category] ?? 0
     }))
   }, [data, month, transferCats])
 
   const trendData = useMemo(() => {
-    const months: Record<string, { income: number; expenses: number }> = {}
+    const months: Record<string, { income: number; expenses: number; saved: number }> = {}
     data.transactions
       .filter((t) => !transferCats.has(t.category))
       .forEach((t) => {
         const m = monthKey(t.date)
-        if (!months[m]) months[m] = { income: 0, expenses: 0 }
+        if (!months[m]) months[m] = { income: 0, expenses: 0, saved: 0 }
         if (t.type === 'income') months[m].income += t.amount
+        else if (savingsCats.has(t.category)) months[m].saved += t.amount
         else months[m].expenses += t.amount
       })
     return Object.entries(months)
@@ -68,20 +74,21 @@ export default function Charts({ store }: Props) {
         month: m,
         Income: v.income,
         Expenses: v.expenses,
-        'Savings Rate': v.income > 0 ? Math.round(((v.income - v.expenses) / v.income) * 100) : 0
+        Saved: v.saved,
+        'Savings Rate': v.income > 0 ? Math.round((v.saved / v.income) * 100) : 0
       }))
-  }, [data, transferCats])
+  }, [data, transferCats, savingsCats])
 
   const topMerchants = useMemo(() => {
     const byDesc: Record<string, number> = {}
     data.transactions
-      .filter((t) => t.type === 'expense' && monthKey(t.date) === month && !transferCats.has(t.category))
+      .filter((t) => t.type === 'expense' && monthKey(t.date) === month && !transferCats.has(t.category) && !savingsCats.has(t.category))
       .forEach((t) => { byDesc[t.description] = (byDesc[t.description] ?? 0) + t.amount })
     return Object.entries(byDesc)
       .map(([name, amount]) => ({ name, amount }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 10)
-  }, [data, month, transferCats])
+  }, [data, month, transferCats, savingsCats])
 
   // Drill-down: all transactions for a selected month
   const drillMonthTxns = useMemo(() => {
@@ -184,7 +191,7 @@ export default function Charts({ store }: Props) {
                 <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: '#3c3b58' }} cursor={CURSOR_STYLE} />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#8a89a8' }} />
                 <Bar dataKey="Budget" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Spent" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Actual" fill="#ef4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -193,7 +200,7 @@ export default function Charts({ store }: Props) {
 
       {/* Trend line */}
       <div className="card card-glow p-5">
-        <h2 className="font-semibold mb-4" style={{ color: '#3c3b58' }}>Income vs Expenses (Last 6 Months)</h2>
+        <h2 className="font-semibold mb-4" style={{ color: '#3c3b58' }}>Income vs Expenses vs Saved (Last 6 Months)</h2>
         {trendData.length === 0 ? (
           <p className="text-sm" style={{ color: '#aeadcc' }}>No data yet.</p>
         ) : (
@@ -206,6 +213,7 @@ export default function Charts({ store }: Props) {
               <Legend wrapperStyle={{ fontSize: 12, color: '#8a89a8' }} />
               <Line type="monotone" dataKey="Income" stroke="#16a34a" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="Expenses" stroke="#dc2626" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="Saved" stroke="#0d9488" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -271,15 +279,29 @@ export default function Charts({ store }: Props) {
                 <p className="text-xs mt-0.5" style={{ color: '#8a89a8' }}>{drillMonthTxns.length} transactions</p>
               </div>
               <div className="flex items-center gap-6 text-sm mr-6">
-                {(['income', 'expense'] as const).map((type) => {
-                  const total = drillMonthTxns.filter(t => t.type === type).reduce((s, t) => s + t.amount, 0)
+                {(() => {
+                  const income = drillMonthTxns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+                  const spent = drillMonthTxns.filter(t => t.type === 'expense' && !savingsCats.has(t.category)).reduce((s, t) => s + t.amount, 0)
+                  const saved = drillMonthTxns.filter(t => t.type === 'expense' && savingsCats.has(t.category)).reduce((s, t) => s + t.amount, 0)
                   return (
-                    <div key={type} className="text-right">
-                      <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>{type === 'income' ? 'Income' : 'Expenses'}</p>
-                      <p className="font-bold" style={{ color: type === 'income' ? '#16a34a' : '#dc2626' }}>{formatCurrency(total)}</p>
-                    </div>
+                    <>
+                      <div className="text-right">
+                        <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Income</p>
+                        <p className="font-bold" style={{ color: '#16a34a' }}>{formatCurrency(income)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Spent</p>
+                        <p className="font-bold" style={{ color: '#dc2626' }}>{formatCurrency(spent)}</p>
+                      </div>
+                      {saved > 0 && (
+                        <div className="text-right">
+                          <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Saved</p>
+                          <p className="font-bold" style={{ color: '#0d9488' }}>{formatCurrency(saved)}</p>
+                        </div>
+                      )}
+                    </>
                   )
-                })}
+                })()}
               </div>
               <button onClick={() => setDrillMonth(null)}
                 className="text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg"

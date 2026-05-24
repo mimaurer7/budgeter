@@ -58,6 +58,7 @@ export default function Transactions({ store }: Props) {
   }
 
   const catColor = (name: string) => data.categories.find(c => c.name === name)?.color ?? '#8a89a8'
+  const savingsCatNames = new Set(data.categories.filter(c => c.savings).map(c => c.name))
 
   return (
     <div className="p-8">
@@ -109,7 +110,7 @@ export default function Transactions({ store }: Props) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right font-semibold"
-                      style={{ color: t.type === 'income' ? '#16a34a' : '#dc2626' }}>
+                      style={{ color: t.type === 'income' ? '#16a34a' : savingsCatNames.has(t.category) ? '#0d9488' : '#dc2626' }}>
                       {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                     </td>
                     <td className="px-4 py-3">
