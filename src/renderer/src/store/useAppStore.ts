@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AppData, Transaction, BudgetGoal, Category } from '../types'
-import { EMPTY_APP_DATA, DEFAULT_CATEGORIES, generateId, normalizeDate, guessCategory } from '../utils/data'
+import { EMPTY_APP_DATA, DEFAULT_CATEGORIES, generateId, normalizeDate } from '../utils/data'
 
 declare global {
   interface Window {
@@ -44,12 +44,10 @@ export function useAppStore() {
           savingsBalance: saved.savingsBalance ?? 0,
           categories: mergedCategories,
           transactions: (saved.transactions ?? []).map((t) => {
-            let category = t.category
-            // Re-run guesser on uncategorized and on old Savings transactions
-            // that were likely internal transfers (now get routed to Transfer)
-            if (category === 'Other' || category === 'Uncategorized' || category === 'Savings' || category === 'Transfer') {
-              category = guessCategory(t.description)
-            }
+            // Only fix the legacy 'Other' label (renamed to 'Uncategorized').
+            // Everything else is trusted as-is — re-guessing here overrides
+            // manual categorizations the user has made.
+            const category = t.category === 'Other' ? 'Uncategorized' : t.category
             return { ...t, date: normalizeDate(t.date), category }
           })
         }
