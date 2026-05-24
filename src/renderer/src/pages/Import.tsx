@@ -97,7 +97,7 @@ export default function Import({ store }: Props) {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-2">Import CSV</h1>
-      <p className="text-sm mb-6" style={{ color: '#8a89a8' }}>
+      <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
         Upload your bank's CSV export. Duplicate transactions are automatically skipped.
       </p>
 
@@ -106,7 +106,7 @@ export default function Import({ store }: Props) {
           style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#16a34a' }}>
           Imported {importResult.imported} transaction{importResult.imported !== 1 ? 's' : ''}.
           {importResult.dupes > 0 && (
-            <span className="ml-1" style={{ color: '#8a89a8' }}>({importResult.dupes} duplicates skipped)</span>
+            <span className="ml-1" style={{ color: 'var(--text-muted)' }}>({importResult.dupes} duplicates skipped)</span>
           )}
         </div>
       )}
@@ -123,11 +123,11 @@ export default function Import({ store }: Props) {
 
       {preview.length > 0 && (
         <div className="mt-6 card card-glow overflow-hidden">
-          <div className="px-4 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid #eae9f5' }}>
+          <div className="px-4 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid var(--border-light)' }}>
             <div>
-              <span className="text-sm font-medium" style={{ color: '#1e1d2e' }}>{preview.length} new transactions</span>
+              <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{preview.length} new transactions</span>
               {skipped > 0 && (
-                <span className="text-xs ml-2" style={{ color: '#aeadcc' }}>({skipped} duplicates/blank rows skipped)</span>
+                <span className="text-xs ml-2" style={{ color: 'var(--text-very-muted)' }}>({skipped} duplicates/blank rows skipped)</span>
               )}
             </div>
             <button onClick={handleImport}
@@ -138,8 +138,8 @@ export default function Import({ store }: Props) {
           </div>
           <div className="overflow-x-auto max-h-96 overflow-y-auto">
             <table className="w-full text-xs">
-              <thead style={{ borderBottom: '1px solid #eae9f5' }}>
-                <tr className="text-left" style={{ color: '#8a89a8' }}>
+              <thead style={{ borderBottom: '1px solid var(--border-light)' }}>
+                <tr className="text-left" style={{ color: 'var(--text-muted)' }}>
                   <th className="px-4 py-2 font-medium w-28">Date</th>
                   <th className="px-4 py-2 font-medium">Description</th>
                   <th className="px-4 py-2 font-medium w-32">Category</th>
@@ -151,21 +151,21 @@ export default function Import({ store }: Props) {
                   const catObj = data.categories.find(c => c.name === r.category)
                   const catColor = catObj?.color ?? '#8a89a8'
                   return (
-                  <tr key={i} style={{ borderBottom: '1px solid #f0eff5' }}>
-                    <td className="px-4 py-2" style={{ color: '#8a89a8' }}>{formatDate(r.date)}</td>
-                    <td className="px-4 py-2" style={{ color: '#1e1d2e' }}>{r.description}</td>
-                    <td className="px-4 py-2">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs"
-                        style={{ background: `${catColor}18`, color: catColor }}>
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: catColor }} />
-                        {r.category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-right font-medium"
-                      style={{ color: r.type === 'income' ? '#16a34a' : '#dc2626' }}>
-                      {r.type === 'income' ? '+' : '-'}{formatCurrency(r.amount)}
-                    </td>
-                  </tr>
+                    <tr key={i} style={{ borderBottom: '1px solid var(--border-row)' }}>
+                      <td className="px-4 py-2" style={{ color: 'var(--text-very-muted)' }}>{formatDate(r.date)}</td>
+                      <td className="px-4 py-2" style={{ color: 'var(--text-primary)' }}>{r.description}</td>
+                      <td className="px-4 py-2">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs"
+                          style={{ background: `${catColor}18`, color: catColor }}>
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: catColor }} />
+                          {r.category}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-right font-medium"
+                        style={{ color: r.type === 'income' ? '#16a34a' : '#dc2626' }}>
+                        {r.type === 'income' ? '+' : '-'}{formatCurrency(r.amount)}
+                      </td>
+                    </tr>
                   )
                 })}
               </tbody>

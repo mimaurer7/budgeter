@@ -106,11 +106,11 @@ export default function Dashboard({ store }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm" style={{ color: '#8a89a8' }}>{monthLabel}</p>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{monthLabel}</p>
         </div>
         <input type="month" value={activeMonth} onChange={(e) => setMonth(e.target.value)}
           className="px-3 py-2 text-sm rounded-xl focus:outline-none"
-          style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#3c3b58' }} />
+          style={{ background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }} />
       </div>
 
       {/* ── Monthly snapshot ── */}
@@ -124,49 +124,47 @@ export default function Dashboard({ store }: Props) {
           sub={monthStats.net === 0 ? 'Every dollar has a job!' : monthStats.net < 0 ? 'Over budget' : 'Unallocated'} />
       </div>
 
-      {/* ── All-time summary + savings (asymmetric 2:1) ── */}
+      {/* ── All-time summary + savings ── */}
       <div className="grid gap-4" style={{ gridTemplateColumns: '2fr 1fr' }}>
-        {/* Wide all-time card */}
         <div className="card card-glow p-6">
           <div className="flex items-start justify-between mb-1">
-            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#8a89a8' }}>All-Time Overview</p>
-            {earliestDate && <span className="text-xs" style={{ color: '#aeadcc' }}>since {earliestDate}</span>}
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>All-Time Overview</p>
+            {earliestDate && <span className="text-xs" style={{ color: 'var(--text-very-muted)' }}>since {earliestDate}</span>}
           </div>
           <div className="grid grid-cols-4 gap-4 mt-3">
             <div>
-              <p className="text-xs mb-1" style={{ color: '#8a89a8' }}>Total Earned</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Total Earned</p>
               <p className="text-2xl font-bold" style={{ color: '#16a34a' }}>{formatCurrency(allTime.income)}</p>
-              <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>{allTime.incomeCount} deposits</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-very-muted)' }}>{allTime.incomeCount} deposits</p>
             </div>
             <div>
-              <p className="text-xs mb-1" style={{ color: '#8a89a8' }}>Total Spent</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Total Spent</p>
               <p className="text-2xl font-bold" style={{ color: '#dc2626' }}>{formatCurrency(allTime.expenses)}</p>
-              <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>{allTime.expenseCount} transactions</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-very-muted)' }}>{allTime.expenseCount} transactions</p>
             </div>
             <div>
-              <p className="text-xs mb-1" style={{ color: '#8a89a8' }}>Total Saved</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Total Saved</p>
               <p className="text-2xl font-bold" style={{ color: '#0d9488' }}>{formatCurrency(allTime.saved)}</p>
-              <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>across all time</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-very-muted)' }}>across all time</p>
             </div>
             <div>
-              <p className="text-xs mb-1" style={{ color: '#8a89a8' }}>Net</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Net</p>
               <p className="text-2xl font-bold" style={{ color: allTime.net >= 0 ? '#16a34a' : '#dc2626' }}>{formatCurrency(allTime.net)}</p>
-              <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>unallocated</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-very-muted)' }}>unallocated</p>
             </div>
           </div>
         </div>
 
-        {/* Savings balance */}
         <div className="card card-glow stat-neutral p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#8a89a8' }}>Savings Balance</p>
+          <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--text-muted)' }}>Savings Balance</p>
           {editingSavings ? (
             <div className="flex items-center gap-1.5">
-              <span style={{ color: '#8a89a8' }}>$</span>
+              <span style={{ color: 'var(--text-muted)' }}>$</span>
               <input type="number" value={savingsInput} min="0" step="0.01" autoFocus
                 onChange={(e) => setSavingsInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') saveSavings(); if (e.key === 'Escape') setEditingSavings(false) }}
                 className="flex-1 px-2 py-1 text-sm rounded-lg focus:outline-none"
-                style={{ background: '#f5f4f8', border: '1px solid #6366f1', color: '#1e1d2e' }} />
+                style={{ background: 'var(--bg-input)', border: '1px solid #6366f1', color: 'var(--text-primary)' }} />
               <button onClick={saveSavings} className="text-xs px-2 py-1 rounded-lg" style={{ background: '#6366f1', color: 'white' }}>✓</button>
             </div>
           ) : (
@@ -174,47 +172,47 @@ export default function Dashboard({ store }: Props) {
               <p className="text-2xl font-bold mb-1" style={{ color: '#0d9488' }}>{formatCurrency(data.savingsBalance ?? 0)}</p>
               <button onClick={() => { setSavingsInput(String(data.savingsBalance ?? 0)); setEditingSavings(true) }}
                 className="text-xs px-2 py-1 rounded-lg"
-                style={{ background: '#f0eff8', border: '1px solid #d5d4e8', color: '#8a89a8' }}>
+                style={{ background: 'var(--bg-muted)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
                 Edit
               </button>
             </div>
           )}
-          <p className="text-xs mt-2" style={{ color: '#aeadcc' }}>manually tracked</p>
+          <p className="text-xs mt-2" style={{ color: 'var(--text-very-muted)' }}>manually tracked</p>
         </div>
       </div>
 
       {/* ── Year by Year ── */}
       {yearStats.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide mb-3" style={{ color: '#8a89a8' }}>Year by Year</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--text-muted)' }}>Year by Year</h2>
           <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin' }}>
             {yearStats.map((ys) => (
               <button key={ys.year} onClick={() => setDrillYear(ys.year)}
                 className="shrink-0 card card-glow p-4 text-left transition-all hover:shadow-md"
                 style={{ width: 160, borderLeft: `3px solid ${ys.net >= 0 ? '#16a34a' : '#dc2626'}` }}>
-                <p className="text-2xl font-bold mb-2" style={{ color: '#1e1d2e' }}>{ys.year}</p>
-                <p className="text-xs mb-0.5" style={{ color: '#8a89a8' }}>Spent</p>
+                <p className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>{ys.year}</p>
+                <p className="text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>Spent</p>
                 <p className="text-lg font-bold" style={{ color: '#dc2626' }}>{formatCurrency(ys.expenses)}</p>
                 {ys.saved > 0 && (
                   <>
-                    <p className="text-xs mt-1 mb-0.5" style={{ color: '#8a89a8' }}>Saved</p>
+                    <p className="text-xs mt-1 mb-0.5" style={{ color: 'var(--text-muted)' }}>Saved</p>
                     <p className="text-sm font-semibold" style={{ color: '#0d9488' }}>{formatCurrency(ys.saved)}</p>
                   </>
                 )}
                 <p className="text-xs mt-2" style={{ color: '#16a34a' }}>+{formatCurrency(ys.income)} in</p>
-                <p className="text-xs mt-1.5" style={{ color: '#aeadcc' }}>{ys.txCount} expenses</p>
+                <p className="text-xs mt-1.5" style={{ color: 'var(--text-very-muted)' }}>{ys.txCount} expenses</p>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* ── Bottom panels (3:2 asymmetric) ── */}
+      {/* ── Bottom panels ── */}
       <div className="grid grid-cols-5 gap-6">
         <div className="col-span-3 card card-glow p-5">
-          <h2 className="font-semibold mb-4" style={{ color: '#3c3b58' }}>Top Spending Categories</h2>
+          <h2 className="font-semibold mb-4" style={{ color: 'var(--text-secondary)' }}>Top Spending Categories</h2>
           {Object.keys(monthStats.byCategory).length === 0 ? (
-            <p className="text-sm" style={{ color: '#aeadcc' }}>No expenses for this month.</p>
+            <p className="text-sm" style={{ color: 'var(--text-very-muted)' }}>No expenses for this month.</p>
           ) : (
             <ul className="space-y-3">
               {Object.entries(monthStats.byCategory).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([cat, amt]) => {
@@ -226,15 +224,15 @@ export default function Dashboard({ store }: Props) {
                     <div className="flex justify-between text-sm mb-1">
                       <div className="flex items-center gap-2">
                         {catObj && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: catObj.color }} />}
-                        <span style={{ color: '#3c3b58' }}>{cat}</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>{cat}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        {goal && <span className="text-xs" style={{ color: '#aeadcc' }}>/ {formatCurrency(goal.monthlyLimit)}</span>}
-                        <span className="font-medium" style={{ color: '#1e1d2e' }}>{formatCurrency(amt)}</span>
+                        {goal && <span className="text-xs" style={{ color: 'var(--text-very-muted)' }}>/ {formatCurrency(goal.monthlyLimit)}</span>}
+                        <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{formatCurrency(amt)}</span>
                       </div>
                     </div>
                     {pct !== null && (
-                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#eae9f5' }}>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-light)' }}>
                         <div className="h-full rounded-full transition-all"
                           style={{ width: `${pct}%`, background: pct >= 100 ? '#dc2626' : pct >= 80 ? '#d97706' : '#6366f1' }} />
                       </div>
@@ -247,16 +245,16 @@ export default function Dashboard({ store }: Props) {
         </div>
 
         <div className="col-span-2 card card-glow p-5">
-          <h2 className="font-semibold mb-4" style={{ color: '#3c3b58' }}>Recent Transactions</h2>
+          <h2 className="font-semibold mb-4" style={{ color: 'var(--text-secondary)' }}>Recent Transactions</h2>
           {recent.length === 0 ? (
-            <p className="text-sm" style={{ color: '#aeadcc' }}>No transactions yet.</p>
+            <p className="text-sm" style={{ color: 'var(--text-very-muted)' }}>No transactions yet.</p>
           ) : (
             <ul className="space-y-2.5">
               {recent.map((t) => (
                 <li key={t.id} className="flex justify-between items-start gap-2">
                   <div className="min-w-0">
-                    <p className="text-sm truncate" style={{ color: '#1e1d2e' }}>{t.description}</p>
-                    <p className="text-xs mt-0.5" style={{ color: '#aeadcc' }}>{formatDate(t.date)} · {t.category}</p>
+                    <p className="text-sm truncate" style={{ color: 'var(--text-primary)' }}>{t.description}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-very-muted)' }}>{formatDate(t.date)} · {t.category}</p>
                   </div>
                   <span className="text-sm font-semibold shrink-0" style={{ color: t.type === 'income' ? '#16a34a' : '#dc2626' }}>
                     {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
@@ -270,17 +268,15 @@ export default function Dashboard({ store }: Props) {
 
       {/* ── Year drill-down modal ── */}
       {drillYear && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(30,29,46,0.4)' }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'var(--overlay-bg)' }}
           onClick={() => setDrillYear(null)}>
           <div className="card card-glow w-full max-w-2xl max-h-[85vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}>
-            {/* Modal header */}
-            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #eae9f5' }}>
+            <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-light)' }}>
               <div>
-                <h2 className="text-xl font-bold" style={{ color: '#1e1d2e' }}>{drillYear}</h2>
-                <p className="text-xs mt-0.5" style={{ color: '#8a89a8' }}>{drillYearTxns.length} transactions</p>
+                <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{drillYear}</h2>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{drillYearTxns.length} transactions</p>
               </div>
-              {/* Year summary stats */}
               <div className="flex items-center gap-6 mr-4">
                 {(() => {
                   const ys = yearStats.find(y => y.year === drillYear)
@@ -288,19 +284,19 @@ export default function Dashboard({ store }: Props) {
                   return (
                     <>
                       <div className="text-right">
-                        <p className="text-xs" style={{ color: '#8a89a8' }}>Income</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Income</p>
                         <p className="font-bold text-sm" style={{ color: '#16a34a' }}>{formatCurrency(ys.income)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs" style={{ color: '#8a89a8' }}>Spent</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Spent</p>
                         <p className="font-bold text-sm" style={{ color: '#dc2626' }}>{formatCurrency(ys.expenses)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs" style={{ color: '#8a89a8' }}>Saved</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Saved</p>
                         <p className="font-bold text-sm" style={{ color: '#0d9488' }}>{formatCurrency(ys.saved)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs" style={{ color: '#8a89a8' }}>Net</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Net</p>
                         <p className="font-bold text-sm" style={{ color: ys.net >= 0 ? '#16a34a' : '#dc2626' }}>
                           {ys.net >= 0 ? '+' : ''}{formatCurrency(ys.net)}
                         </p>
@@ -311,17 +307,16 @@ export default function Dashboard({ store }: Props) {
               </div>
               <button onClick={() => setDrillYear(null)}
                 className="text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg"
-                style={{ color: '#8a89a8', background: '#f0eff8' }}>×</button>
+                style={{ color: 'var(--text-muted)', background: 'var(--bg-muted)' }}>×</button>
             </div>
-            {/* Transaction list */}
             <div className="overflow-y-auto flex-1">
               {drillYearTxns.map((t, i) => (
                 <div key={t.id} className="flex items-center gap-4 px-6 py-3"
-                  style={{ borderBottom: i < drillYearTxns.length - 1 ? '1px solid #f0eff5' : 'none' }}>
-                  <span className="text-xs w-20 shrink-0" style={{ color: '#aeadcc' }}>{formatDate(t.date)}</span>
-                  <span className="text-sm flex-1 truncate" style={{ color: '#1e1d2e' }}>{t.description}</span>
+                  style={{ borderBottom: i < drillYearTxns.length - 1 ? '1px solid var(--border-row)' : 'none' }}>
+                  <span className="text-xs w-20 shrink-0" style={{ color: 'var(--text-very-muted)' }}>{formatDate(t.date)}</span>
+                  <span className="text-sm flex-1 truncate" style={{ color: 'var(--text-primary)' }}>{t.description}</span>
                   <span className="text-xs px-2 py-0.5 rounded-full shrink-0"
-                    style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? '#8a89a8' }}>
+                    style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? 'var(--text-muted)' }}>
                     {t.category}
                   </span>
                   <span className="text-sm font-semibold shrink-0 w-24 text-right"
@@ -343,9 +338,9 @@ function StatCard({ label, value, color, accent, sub, small }: {
 }) {
   return (
     <div className={`card card-glow ${accent} p-5`}>
-      <p className="text-xs mb-1.5 font-medium uppercase tracking-wide" style={{ color: '#8a89a8' }}>{label}</p>
+      <p className="text-xs mb-1.5 font-medium uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{label}</p>
       <p className={`font-bold ${small ? 'text-lg' : 'text-2xl'}`} style={{ color }}>{value}</p>
-      {sub && <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>{sub}</p>}
+      {sub && <p className="text-xs mt-1" style={{ color: 'var(--text-very-muted)' }}>{sub}</p>}
     </div>
   )
 }

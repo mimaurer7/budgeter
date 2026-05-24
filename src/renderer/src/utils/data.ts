@@ -36,6 +36,7 @@ export const EMPTY_APP_DATA: AppData = {
   categories: DEFAULT_CATEGORIES,
   monthlyIncome: {},
   savingsBalance: 0,
+  debtBalance: 0,
 }
 
 export function generateId(): string {

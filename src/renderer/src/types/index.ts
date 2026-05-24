@@ -8,6 +8,7 @@ export interface Transaction {
   type: TransactionType
   category: string
   notes?: string
+  recurring?: boolean
 }
 
 export interface BudgetGoal {
@@ -34,6 +35,7 @@ export interface AppData {
   categories: Category[]
   monthlyIncome: Record<string, number>  // YYYY-MM -> planned income amount
   savingsBalance: number
+  debtBalance: number
 }
 
-export type Page = 'dashboard' | 'transactions' | 'budget' | 'charts' | 'import'
+export type Page = 'dashboard' | 'transactions' | 'budget' | 'charts' | 'import' | 'networth'

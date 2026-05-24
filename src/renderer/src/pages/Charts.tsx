@@ -5,22 +5,30 @@ import {
   LineChart, Line, ReferenceLine
 } from 'recharts'
 import { useAppStore } from '../store/useAppStore'
+import { Theme } from '../store/useTheme'
 import { formatCurrency, currentMonth, monthKey, formatDate } from '../utils/data'
 
 interface Props {
   store: ReturnType<typeof useAppStore>
+  theme: Theme
 }
 
-const CHART_STYLE = { backgroundColor: '#fff', border: '1px solid #eae9f5', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: '#3c3b58' }
-const AXIS_STYLE = { fill: '#aeadcc', fontSize: 11 }
-const GRID_COLOR = '#eae9f5'
-const CURSOR_STYLE = { fill: 'rgba(99,102,241,0.05)' }
-
-export default function Charts({ store }: Props) {
+export default function Charts({ store, theme }: Props) {
   const { data } = store
   const [month, setMonth] = useState(currentMonth())
   const [drillSavingsMonth, setDrillSavingsMonth] = useState<string | null>(null)
   const [drillMerchant, setDrillMerchant] = useState<string | null>(null)
+
+  const isDark = theme === 'dark'
+  const CHART_STYLE = {
+    backgroundColor: isDark ? '#1a1929' : '#fff',
+    border: `1px solid ${isDark ? '#2a2840' : '#eae9f5'}`,
+    borderRadius: 10, padding: '8px 12px', fontSize: 12,
+    color: isDark ? '#b0afd0' : '#3c3b58'
+  }
+  const AXIS_STYLE = { fill: isDark ? '#4a4968' : '#aeadcc', fontSize: 11 }
+  const GRID_COLOR = isDark ? '#1f1e32' : '#eae9f5'
+  const CURSOR_STYLE = { fill: 'rgba(99,102,241,0.05)' }
 
   const transferCats = useMemo(() =>
     new Set(data.categories.filter((c) => c.transfer).map((c) => c.name)),
@@ -58,22 +66,19 @@ export default function Charts({ store }: Props) {
 
   const trendData = useMemo(() => {
     const months: Record<string, { income: number; expenses: number; saved: number; withdrawn: number }> = {}
-    data.transactions
-      .forEach((t) => {
-        const m = monthKey(t.date)
-        if (!months[m]) months[m] = { income: 0, expenses: 0, saved: 0, withdrawn: 0 }
-        if (transferCats.has(t.category)) {
-          // Savings Withdrawal (income type) counts as a negative savings event
-          if (t.type === 'income') months[m].withdrawn += t.amount
-          // All other transfers ignored
-        } else if (t.type === 'income') {
-          months[m].income += t.amount
-        } else if (savingsCats.has(t.category)) {
-          months[m].saved += t.amount
-        } else {
-          months[m].expenses += t.amount
-        }
-      })
+    data.transactions.forEach((t) => {
+      const m = monthKey(t.date)
+      if (!months[m]) months[m] = { income: 0, expenses: 0, saved: 0, withdrawn: 0 }
+      if (transferCats.has(t.category)) {
+        if (t.type === 'income') months[m].withdrawn += t.amount
+      } else if (t.type === 'income') {
+        months[m].income += t.amount
+      } else if (savingsCats.has(t.category)) {
+        months[m].saved += t.amount
+      } else {
+        months[m].expenses += t.amount
+      }
+    })
     return Object.entries(months)
       .sort((a, b) => a[0].localeCompare(b[0]))
       .slice(-6)
@@ -97,7 +102,6 @@ export default function Charts({ store }: Props) {
       .slice(0, 10)
   }, [data, month, transferCats, savingsCats])
 
-  // Drill-down: savings-only transactions for a selected month (deposits + withdrawals)
   const savingsDrillTxns = useMemo(() => {
     if (!drillSavingsMonth) return []
     return [...data.transactions]
@@ -110,7 +114,6 @@ export default function Charts({ store }: Props) {
       .sort((a, b) => b.date.localeCompare(a.date))
   }, [data.transactions, drillSavingsMonth, savingsCats, transferCats])
 
-  // Drill-down: all-time transactions for a selected merchant, grouped by year
   const drillMerchantTxns = useMemo(() => {
     if (!drillMerchant) return []
     return [...data.transactions]
@@ -144,15 +147,15 @@ export default function Charts({ store }: Props) {
         <h1 className="text-2xl font-bold">Charts</h1>
         <input type="month" value={month} onChange={(e) => setMonth(e.target.value)}
           className="px-3 py-2 text-sm rounded-xl focus:outline-none"
-          style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#3c3b58' }} />
+          style={{ background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }} />
       </div>
 
       <div className="grid grid-cols-2 gap-6">
         {/* Pie chart */}
         <div className="card card-glow p-5">
-          <h2 className="font-semibold mb-4" style={{ color: '#3c3b58' }}>Spending by Category</h2>
+          <h2 className="font-semibold mb-4" style={{ color: 'var(--text-secondary)' }}>Spending by Category</h2>
           {pieData.length === 0 ? (
-            <p className="text-sm" style={{ color: '#aeadcc' }}>No expense data for this month.</p>
+            <p className="text-sm" style={{ color: 'var(--text-very-muted)' }}>No expense data for this month.</p>
           ) : (
             <div>
               <ResponsiveContainer width="100%" height={200}>
@@ -165,8 +168,7 @@ export default function Charts({ store }: Props) {
                   <Tooltip
                     formatter={(v: number, name: string) => [formatCurrency(v), name]}
                     contentStyle={CHART_STYLE}
-                    labelStyle={{ color: '#8a89a8' }}
-                    itemStyle={{ color: '#3c3b58' }}
+                    itemStyle={{ color: isDark ? '#b0afd0' : '#3c3b58' }}
                     cursor={CURSOR_STYLE}
                   />
                 </PieChart>
@@ -176,11 +178,11 @@ export default function Charts({ store }: Props) {
                   <li key={entry.name} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: colors[entry.name] ?? '#aeadcc' }} />
-                      <span style={{ color: '#5a5978' }}>{entry.name}</span>
+                      <span style={{ color: 'var(--text-chart)' }}>{entry.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span style={{ color: '#aeadcc' }}>{((entry.value / totalSpend) * 100).toFixed(0)}%</span>
-                      <span className="font-medium" style={{ color: '#3c3b58' }}>{formatCurrency(entry.value)}</span>
+                      <span style={{ color: 'var(--text-very-muted)' }}>{((entry.value / totalSpend) * 100).toFixed(0)}%</span>
+                      <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>{formatCurrency(entry.value)}</span>
                     </div>
                   </li>
                 ))}
@@ -191,17 +193,17 @@ export default function Charts({ store }: Props) {
 
         {/* Budget vs Actual */}
         <div className="card card-glow p-5">
-          <h2 className="font-semibold mb-4" style={{ color: '#3c3b58' }}>Budget vs Actual</h2>
+          <h2 className="font-semibold mb-4" style={{ color: 'var(--text-secondary)' }}>Budget vs Actual</h2>
           {budgetBarData.length === 0 ? (
-            <p className="text-sm" style={{ color: '#aeadcc' }}>Set budget goals to see this chart.</p>
+            <p className="text-sm" style={{ color: 'var(--text-very-muted)' }}>Set budget goals to see this chart.</p>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={budgetBarData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
                 <XAxis dataKey="category" tick={AXIS_STYLE} />
                 <YAxis tick={AXIS_STYLE} tickFormatter={(v) => `$${v}`} />
-                <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: '#3c3b58' }} cursor={CURSOR_STYLE} />
-                <Legend wrapperStyle={{ fontSize: 12, color: '#8a89a8' }} />
+                <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: isDark ? '#b0afd0' : '#3c3b58' }} cursor={CURSOR_STYLE} />
+                <Legend wrapperStyle={{ fontSize: 12, color: isDark ? '#7a7998' : '#8a89a8' }} />
                 <Bar dataKey="Budget" fill="#6366f1" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Actual" fill="#ef4444" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -212,17 +214,17 @@ export default function Charts({ store }: Props) {
 
       {/* Trend line */}
       <div className="card card-glow p-5">
-        <h2 className="font-semibold mb-4" style={{ color: '#3c3b58' }}>Income vs Expenses vs Saved (Last 6 Months)</h2>
+        <h2 className="font-semibold mb-4" style={{ color: 'var(--text-secondary)' }}>Income vs Expenses vs Saved (Last 6 Months)</h2>
         {trendData.length === 0 ? (
-          <p className="text-sm" style={{ color: '#aeadcc' }}>No data yet.</p>
+          <p className="text-sm" style={{ color: 'var(--text-very-muted)' }}>No data yet.</p>
         ) : (
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={trendData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
               <XAxis dataKey="month" tick={AXIS_STYLE} />
               <YAxis tick={AXIS_STYLE} tickFormatter={(v) => `$${v}`} />
-              <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: '#3c3b58' }} cursor={CURSOR_STYLE} />
-              <Legend wrapperStyle={{ fontSize: 12, color: '#8a89a8' }} />
+              <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: isDark ? '#b0afd0' : '#3c3b58' }} cursor={CURSOR_STYLE} />
+              <Legend wrapperStyle={{ fontSize: 12, color: isDark ? '#7a7998' : '#8a89a8' }} />
               <Line type="monotone" dataKey="Income" stroke="#16a34a" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="Expenses" stroke="#dc2626" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="Saved" stroke="#0d9488" strokeWidth={2} dot={false} />
@@ -232,12 +234,12 @@ export default function Charts({ store }: Props) {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* Monthly savings rate — click a bar to drill in */}
+        {/* Monthly savings rate */}
         <div className="card card-glow p-5">
-          <h2 className="font-semibold mb-1" style={{ color: '#3c3b58' }}>Monthly Savings Rate</h2>
-          <p className="text-xs mb-4" style={{ color: '#aeadcc' }}>% of income saved · click a bar to see that month's savings activity</p>
+          <h2 className="font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>Monthly Savings Rate</h2>
+          <p className="text-xs mb-4" style={{ color: 'var(--text-very-muted)' }}>% of income saved · click a bar to see that month's savings activity</p>
           {trendData.length === 0 ? (
-            <p className="text-sm" style={{ color: '#aeadcc' }}>No data yet.</p>
+            <p className="text-sm" style={{ color: 'var(--text-very-muted)' }}>No data yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={trendData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}
@@ -245,8 +247,8 @@ export default function Charts({ store }: Props) {
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
                 <XAxis dataKey="month" tick={AXIS_STYLE} />
                 <YAxis tick={AXIS_STYLE} tickFormatter={(v) => `${v}%`} domain={['auto', 'auto']} />
-                <Tooltip formatter={(v: number) => [`${v}%`, 'Savings Rate']} contentStyle={CHART_STYLE} itemStyle={{ color: '#3c3b58' }} cursor={CURSOR_STYLE} />
-                <ReferenceLine y={0} stroke="#d5d4e8" strokeDasharray="4 4" />
+                <Tooltip formatter={(v: number) => [`${v}%`, 'Savings Rate']} contentStyle={CHART_STYLE} itemStyle={{ color: isDark ? '#b0afd0' : '#3c3b58' }} cursor={CURSOR_STYLE} />
+                <ReferenceLine y={0} stroke={isDark ? '#2a2840' : '#d5d4e8'} strokeDasharray="4 4" />
                 <Bar dataKey="Savings Rate" radius={[4, 4, 0, 0]} style={{ cursor: 'pointer' }}>
                   {trendData.map((entry, i) => (
                     <Cell key={i} fill={entry['Savings Rate'] < 0 ? '#dc2626' : entry['Savings Rate'] < 10 ? '#d97706' : '#0d9488'} />
@@ -257,12 +259,12 @@ export default function Charts({ store }: Props) {
           )}
         </div>
 
-        {/* Top merchants — click to drill into all-time */}
+        {/* Top merchants */}
         <div className="card card-glow p-5">
-          <h2 className="font-semibold mb-1" style={{ color: '#3c3b58' }}>Top Merchants</h2>
-          <p className="text-xs mb-4" style={{ color: '#aeadcc' }}>Biggest payees this month · click to see all-time history</p>
+          <h2 className="font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>Top Merchants</h2>
+          <p className="text-xs mb-4" style={{ color: 'var(--text-very-muted)' }}>Biggest payees this month · click to see all-time history</p>
           {topMerchants.length === 0 ? (
-            <p className="text-sm" style={{ color: '#aeadcc' }}>No expense data for this month.</p>
+            <p className="text-sm" style={{ color: 'var(--text-very-muted)' }}>No expense data for this month.</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={topMerchants} layout="vertical" margin={{ top: 0, right: 60, left: 10, bottom: 0 }}
@@ -271,7 +273,7 @@ export default function Charts({ store }: Props) {
                 <XAxis type="number" tick={AXIS_STYLE} tickFormatter={(v) => `$${v}`} />
                 <YAxis type="category" dataKey="name" tick={AXIS_STYLE} width={110}
                   tickFormatter={(v: string) => v.length > 14 ? v.slice(0, 14) + '…' : v} />
-                <Tooltip formatter={(v: number) => [formatCurrency(v), 'Amount']} contentStyle={CHART_STYLE} itemStyle={{ color: '#3c3b58' }} cursor={CURSOR_STYLE} />
+                <Tooltip formatter={(v: number) => [formatCurrency(v), 'Amount']} contentStyle={CHART_STYLE} itemStyle={{ color: isDark ? '#b0afd0' : '#3c3b58' }} cursor={CURSOR_STYLE} />
                 <Bar dataKey="amount" fill="#6366f1" radius={[0, 4, 4, 0]} style={{ cursor: 'pointer' }} />
               </BarChart>
             </ResponsiveContainer>
@@ -279,16 +281,16 @@ export default function Charts({ store }: Props) {
         </div>
       </div>
 
-      {/* ── Drill-down: savings activity for a month ── */}
+      {/* ── Drill-down: savings activity ── */}
       {drillSavingsMonth && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(30,29,46,0.4)' }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'var(--overlay-bg)' }}
           onClick={() => setDrillSavingsMonth(null)}>
           <div className="card card-glow w-full max-w-2xl max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid #eae9f5' }}>
+            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border-light)' }}>
               <div>
-                <h2 className="font-semibold text-lg" style={{ color: '#1e1d2e' }}>{savingsDrillLabel} — Savings</h2>
-                <p className="text-xs mt-0.5" style={{ color: '#8a89a8' }}>{savingsDrillTxns.length} transaction{savingsDrillTxns.length !== 1 ? 's' : ''}</p>
+                <h2 className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>{savingsDrillLabel} — Savings</h2>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{savingsDrillTxns.length} transaction{savingsDrillTxns.length !== 1 ? 's' : ''}</p>
               </div>
               <div className="flex items-center gap-6 text-sm mr-6">
                 {(() => {
@@ -298,17 +300,17 @@ export default function Charts({ store }: Props) {
                   return (
                     <>
                       <div className="text-right">
-                        <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Deposited</p>
+                        <p className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Deposited</p>
                         <p className="font-bold" style={{ color: '#0d9488' }}>{formatCurrency(deposited)}</p>
                       </div>
                       {withdrawn > 0 && (
                         <div className="text-right">
-                          <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Withdrawn</p>
+                          <p className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Withdrawn</p>
                           <p className="font-bold" style={{ color: '#7c9cc0' }}>{formatCurrency(withdrawn)}</p>
                         </div>
                       )}
                       <div className="text-right">
-                        <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Net</p>
+                        <p className="text-xs uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Net</p>
                         <p className="font-bold" style={{ color: net >= 0 ? '#0d9488' : '#dc2626' }}>
                           {net >= 0 ? '+' : ''}{formatCurrency(net)}
                         </p>
@@ -319,21 +321,21 @@ export default function Charts({ store }: Props) {
               </div>
               <button onClick={() => setDrillSavingsMonth(null)}
                 className="text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg"
-                style={{ color: '#8a89a8', background: '#f0eff8' }}>×</button>
+                style={{ color: 'var(--text-muted)', background: 'var(--bg-muted)' }}>×</button>
             </div>
             <div className="overflow-y-auto flex-1">
               {savingsDrillTxns.length === 0 ? (
-                <p className="px-6 py-4 text-sm" style={{ color: '#aeadcc' }}>No savings activity this month.</p>
+                <p className="px-6 py-4 text-sm" style={{ color: 'var(--text-very-muted)' }}>No savings activity this month.</p>
               ) : savingsDrillTxns.map((t, i) => {
                 const isDeposit = t.type === 'expense'
                 const amtColor = isDeposit ? '#0d9488' : '#7c9cc0'
                 return (
                   <div key={t.id} className="flex items-center gap-4 px-6 py-3"
-                    style={{ borderBottom: i < savingsDrillTxns.length - 1 ? '1px solid #f0eff5' : 'none' }}>
-                    <span className="text-xs w-16 shrink-0" style={{ color: '#aeadcc' }}>{formatDate(t.date)}</span>
-                    <span className="text-sm flex-1 truncate" style={{ color: '#1e1d2e' }}>{t.description}</span>
+                    style={{ borderBottom: i < savingsDrillTxns.length - 1 ? '1px solid var(--border-row)' : 'none' }}>
+                    <span className="text-xs w-16 shrink-0" style={{ color: 'var(--text-very-muted)' }}>{formatDate(t.date)}</span>
+                    <span className="text-sm flex-1 truncate" style={{ color: 'var(--text-primary)' }}>{t.description}</span>
                     <span className="text-xs px-2 py-0.5 rounded-full shrink-0"
-                      style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? '#8a89a8' }}>
+                      style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? 'var(--text-muted)' }}>
                       {t.category}
                     </span>
                     <span className="text-sm font-semibold shrink-0 w-24 text-right" style={{ color: amtColor }}>
@@ -349,42 +351,40 @@ export default function Charts({ store }: Props) {
 
       {/* ── Drill-down: merchant all-time ── */}
       {drillMerchant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(30,29,46,0.4)' }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'var(--overlay-bg)' }}
           onClick={() => setDrillMerchant(null)}>
           <div className="card card-glow w-full max-w-2xl max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid #eae9f5' }}>
+            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border-light)' }}>
               <div>
-                <h2 className="font-semibold text-lg truncate max-w-sm" style={{ color: '#1e1d2e' }}>{drillMerchant}</h2>
-                <p className="text-xs mt-0.5" style={{ color: '#8a89a8' }}>
+                <h2 className="font-semibold text-lg truncate max-w-sm" style={{ color: 'var(--text-primary)' }}>{drillMerchant}</h2>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
                   {drillMerchantTxns.length} transactions · {formatCurrency(drillMerchantTxns.reduce((s, t) => s + t.amount, 0))} all time
                 </p>
               </div>
               <button onClick={() => setDrillMerchant(null)}
                 className="text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg"
-                style={{ color: '#8a89a8', background: '#f0eff8' }}>×</button>
+                style={{ color: 'var(--text-muted)', background: 'var(--bg-muted)' }}>×</button>
             </div>
             <div className="overflow-y-auto flex-1">
               {drillMerchantByYear.map(([year, txns], yi) => {
                 const yearTotal = txns.reduce((s, t) => s + t.amount, 0)
                 return (
                   <div key={year}>
-                    {/* Year header */}
                     <div className="flex items-center justify-between px-6 py-2 sticky top-0"
-                      style={{ background: '#f5f4f8', borderBottom: '1px solid #eae9f5', borderTop: yi > 0 ? '1px solid #eae9f5' : 'none' }}>
+                      style={{ background: 'var(--bg-input)', borderBottom: '1px solid var(--border-light)', borderTop: yi > 0 ? '1px solid var(--border-light)' : 'none' }}>
                       <span className="text-xs font-bold uppercase tracking-wide" style={{ color: '#6366f1' }}>{year}</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs" style={{ color: '#aeadcc' }}>{txns.length} visit{txns.length !== 1 ? 's' : ''}</span>
+                        <span className="text-xs" style={{ color: 'var(--text-very-muted)' }}>{txns.length} visit{txns.length !== 1 ? 's' : ''}</span>
                         <span className="text-sm font-bold" style={{ color: '#dc2626' }}>{formatCurrency(yearTotal)}</span>
                       </div>
                     </div>
-                    {/* Transactions for this year */}
                     {txns.map((t, i) => (
                       <div key={t.id} className="flex items-center gap-4 px-6 py-2.5"
-                        style={{ borderBottom: i < txns.length - 1 ? '1px solid #f0eff5' : 'none' }}>
-                        <span className="text-xs w-20 shrink-0" style={{ color: '#aeadcc' }}>{formatDate(t.date)}</span>
+                        style={{ borderBottom: i < txns.length - 1 ? '1px solid var(--border-row)' : 'none' }}>
+                        <span className="text-xs w-20 shrink-0" style={{ color: 'var(--text-very-muted)' }}>{formatDate(t.date)}</span>
                         <span className="text-xs px-2 py-0.5 rounded-full shrink-0"
-                          style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? '#8a89a8' }}>
+                          style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? 'var(--text-muted)' }}>
                           {t.category}
                         </span>
                         <span className="text-sm font-semibold ml-auto shrink-0" style={{ color: '#dc2626' }}>

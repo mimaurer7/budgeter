@@ -45,6 +45,7 @@ export function useAppStore() {
           ...EMPTY_APP_DATA,
           ...saved,
           savingsBalance: saved.savingsBalance ?? 0,
+          debtBalance: saved.debtBalance ?? 0,
           categories: mergedCategories,
           transactions: (saved.transactions ?? []).map((t) => {
             let category = t.category
@@ -181,6 +182,14 @@ export function useAppStore() {
     [data, save]
   )
 
+  const setDebtBalance = useCallback(
+    (amount: number) => {
+      const next = { ...data, debtBalance: amount }
+      save(next)
+    },
+    [data, save]
+  )
+
   const importTransactions = useCallback(
     (transactions: Omit<Transaction, 'id'>[]) => {
       const withIds = transactions.map((t) => ({ ...t, id: generateId() }))
@@ -228,6 +237,7 @@ export function useAppStore() {
     importTransactions,
     setMonthlyIncome,
     setSavingsBalance,
+    setDebtBalance,
     copyBudgetFromLastMonth,
   }
 }
