@@ -22,6 +22,8 @@ export interface Category {
   name: string
   color: string
   icon?: string
+  hidden?: boolean
+  custom?: boolean
 }
 
 export interface AppData {
@@ -29,6 +31,7 @@ export interface AppData {
   budgetGoals: BudgetGoal[]
   categories: Category[]
   monthlyIncome: Record<string, number>  // YYYY-MM -> planned income amount
+  savingsBalance: number
 }
 
 export type Page = 'dashboard' | 'transactions' | 'budget' | 'charts' | 'import'

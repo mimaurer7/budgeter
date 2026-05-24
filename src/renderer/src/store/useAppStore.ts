@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AppData, Transaction, BudgetGoal, Category } from '../types'
-import { EMPTY_APP_DATA, generateId, normalizeDate, guessCategory } from '../utils/data'
+import { EMPTY_APP_DATA, DEFAULT_CATEGORIES, generateId, normalizeDate, guessCategory } from '../utils/data'
 
 declare global {
   interface Window {
@@ -24,13 +24,29 @@ export function useAppStore() {
       setDataPath(path)
       const saved = await window.api.readData(path)
       if (saved) {
+        // Merge in any new default categories that don't exist in saved data yet
+        const savedNames = new Set((saved.categories ?? []).map((c) => c.name))
+        const newDefaults = DEFAULT_CATEGORIES.filter((c) => !savedNames.has(c.name))
+        const mergedCategories: Category[] = [
+          ...(saved.categories ?? []).map((c) => ({
+            hidden: false,
+            custom: false,
+            ...c,
+          })),
+          ...newDefaults,
+        ]
+
         const migrated: AppData = {
           ...EMPTY_APP_DATA,
           ...saved,
+          savingsBalance: saved.savingsBalance ?? 0,
+          categories: mergedCategories,
           transactions: (saved.transactions ?? []).map((t) => ({
             ...t,
             date: normalizeDate(t.date),
-            category: t.category === 'Other' ? guessCategory(t.description) : t.category
+            category: (t.category === 'Other' || t.category === 'Uncategorized')
+              ? guessCategory(t.description)
+              : t.category
           }))
         }
         setData(migrated)
@@ -107,7 +123,20 @@ export function useAppStore() {
 
   const addCategory = useCallback(
     (cat: Omit<Category, 'id'>) => {
-      const next = { ...data, categories: [...data.categories, { ...cat, id: generateId() }] }
+      const next = { ...data, categories: [...data.categories, { ...cat, id: generateId(), custom: true }] }
+      save(next)
+    },
+    [data, save]
+  )
+
+  const toggleCategoryVisibility = useCallback(
+    (id: string) => {
+      const next = {
+        ...data,
+        categories: data.categories.map((c) =>
+          c.id === id ? { ...c, hidden: !c.hidden } : c
+        )
+      }
       save(next)
     },
     [data, save]
@@ -116,6 +145,14 @@ export function useAppStore() {
   const setMonthlyIncome = useCallback(
     (month: string, amount: number) => {
       const next = { ...data, monthlyIncome: { ...data.monthlyIncome, [month]: amount } }
+      save(next)
+    },
+    [data, save]
+  )
+
+  const setSavingsBalance = useCallback(
+    (amount: number) => {
+      const next = { ...data, savingsBalance: amount }
       save(next)
     },
     [data, save]
@@ -130,6 +167,26 @@ export function useAppStore() {
     [data, save]
   )
 
+  const copyBudgetFromLastMonth = useCallback(
+    (month: string) => {
+      // Find previous month
+      const [y, m] = month.split('-').map(Number)
+      const prevDate = new Date(y, m - 2, 1)
+      const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`
+      const prevGoals = data.budgetGoals.filter((g) => g.month === prevMonth)
+      if (prevGoals.length === 0) return
+      // Only copy goals that don't already exist in target month
+      const existingCats = new Set(data.budgetGoals.filter((g) => g.month === month).map((g) => g.category))
+      const newGoals = prevGoals
+        .filter((g) => !existingCats.has(g.category))
+        .map((g) => ({ ...g, id: generateId(), month }))
+      if (newGoals.length === 0) return
+      const next = { ...data, budgetGoals: [...data.budgetGoals, ...newGoals] }
+      save(next)
+    },
+    [data, save]
+  )
+
   return {
     data,
     loading,
@@ -139,7 +196,10 @@ export function useAppStore() {
     upsertBudgetGoal,
     deleteBudgetGoal,
     addCategory,
+    toggleCategoryVisibility,
     importTransactions,
-    setMonthlyIncome
+    setMonthlyIncome,
+    setSavingsBalance,
+    copyBudgetFromLastMonth,
   }
 }

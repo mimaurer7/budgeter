@@ -7,7 +7,9 @@ interface Props {
 }
 
 export default function Dashboard({ store }: Props) {
-  const { data } = store
+  const { data, setSavingsBalance } = store
+  const [editingSavings, setEditingSavings] = useState(false)
+  const [savingsInput, setSavingsInput] = useState('')
 
   const mostRecentMonth = useMemo(() => {
     if (data.transactions.length === 0) return currentMonth()
@@ -40,6 +42,12 @@ export default function Dashboard({ store }: Props) {
 
   const monthLabel = new Date(activeMonth + '-02').toLocaleString('en-US', { month: 'long', year: 'numeric' })
 
+  function saveSavings() {
+    const val = parseFloat(savingsInput.replace(/[$,]/g, ''))
+    if (!isNaN(val) && val >= 0) setSavingsBalance(val)
+    setEditingSavings(false)
+  }
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -60,8 +68,8 @@ export default function Dashboard({ store }: Props) {
         <StatCard label="Net" value={formatCurrency(stats.net)} color={stats.net >= 0 ? '#22c55e' : '#ef4444'} accent="stat-net" />
       </div>
 
-      {/* All-time stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      {/* All-time stats + savings */}
+      <div className="grid grid-cols-4 gap-4 mb-8">
         <StatCard label="All-Time Earned" value={formatCurrency(stats.allTimeIncome)} color="#22c55e" accent="stat-income"
           sub={`${data.transactions.filter(t => t.type === 'income').length} deposits`} small />
         <StatCard label="All-Time Spent" value={formatCurrency(stats.allTimeExpenses)} color="#ef4444" accent="stat-expense"
@@ -69,6 +77,34 @@ export default function Dashboard({ store }: Props) {
         <StatCard label="Net Savings" value={formatCurrency(stats.allTimeIncome - stats.allTimeExpenses)}
           color={(stats.allTimeIncome - stats.allTimeExpenses) >= 0 ? '#22c55e' : '#ef4444'} accent="stat-neutral"
           sub="all time" small />
+
+        {/* Savings balance — manually adjustable */}
+        <div className="card card-glow stat-neutral p-5">
+          <p className="text-xs mb-1.5 font-medium uppercase tracking-wide" style={{ color: '#5a5a7a' }}>Savings Balance</p>
+          {editingSavings ? (
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-sm" style={{ color: '#5a5a7a' }}>$</span>
+              <input
+                type="number" value={savingsInput} min="0" step="0.01" autoFocus
+                onChange={(e) => setSavingsInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') saveSavings(); if (e.key === 'Escape') setEditingSavings(false) }}
+                className="w-28 px-2 py-1 text-sm rounded-lg focus:outline-none"
+                style={{ background: '#0e0e18', border: '1px solid #6366f1', color: '#d0d0f0' }} />
+              <button onClick={saveSavings} className="text-xs px-1.5 py-1 rounded-lg" style={{ background: '#6366f1', color: 'white' }}>✓</button>
+            </div>
+          ) : (
+            <div className="flex items-end gap-2 mt-1">
+              <p className="text-lg font-bold" style={{ color: '#14b8a6' }}>{formatCurrency(data.savingsBalance ?? 0)}</p>
+              <button
+                onClick={() => { setSavingsInput(String(data.savingsBalance ?? 0)); setEditingSavings(true) }}
+                className="text-xs px-2 py-0.5 mb-0.5 rounded-lg transition-colors"
+                style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', color: '#6a6a8a' }}>
+                Edit
+              </button>
+            </div>
+          )}
+          <p className="text-xs mt-1" style={{ color: '#3a3a5a' }}>manually tracked</p>
+        </div>
       </div>
 
       {/* Bottom panels */}

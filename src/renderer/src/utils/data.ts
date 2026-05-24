@@ -1,23 +1,39 @@
 import { AppData, Category } from '../types'
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: '1', name: 'Housing', color: '#6366f1' },
-  { id: '2', name: 'Food & Dining', color: '#f59e0b' },
-  { id: '3', name: 'Transportation', color: '#10b981' },
-  { id: '4', name: 'Utilities', color: '#3b82f6' },
-  { id: '5', name: 'Healthcare', color: '#ef4444' },
-  { id: '6', name: 'Entertainment', color: '#8b5cf6' },
-  { id: '7', name: 'Shopping', color: '#ec4899' },
-  { id: '8', name: 'Savings', color: '#14b8a6' },
-  { id: '9', name: 'Income', color: '#22c55e' },
-  { id: '10', name: 'Other', color: '#94a3b8' }
+  { id: 'cat-housing',      name: 'Housing',         color: '#6366f1' },
+  { id: 'cat-groceries',    name: 'Groceries',        color: '#84cc16' },
+  { id: 'cat-food',         name: 'Food & Dining',    color: '#f59e0b' },
+  { id: 'cat-transport',    name: 'Transportation',   color: '#10b981' },
+  { id: 'cat-gas',          name: 'Gas',              color: '#06b6d4' },
+  { id: 'cat-utilities',    name: 'Utilities',        color: '#3b82f6' },
+  { id: 'cat-healthcare',   name: 'Healthcare',       color: '#ef4444' },
+  { id: 'cat-insurance',    name: 'Insurance',        color: '#f97316' },
+  { id: 'cat-personal',     name: 'Personal Care',    color: '#ec4899' },
+  { id: 'cat-clothing',     name: 'Clothing',         color: '#d946ef' },
+  { id: 'cat-entertainment',name: 'Entertainment',    color: '#8b5cf6' },
+  { id: 'cat-subscriptions',name: 'Subscriptions',    color: '#7c3aed' },
+  { id: 'cat-shopping',     name: 'Shopping',         color: '#e879f9' },
+  { id: 'cat-travel',       name: 'Travel',           color: '#0ea5e9' },
+  { id: 'cat-gym',          name: 'Gym & Fitness',    color: '#22d3ee' },
+  { id: 'cat-education',    name: 'Education',        color: '#a78bfa' },
+  { id: 'cat-kids',         name: 'Kids',             color: '#fb923c' },
+  { id: 'cat-pets',         name: 'Pets',             color: '#fbbf24' },
+  { id: 'cat-savings',      name: 'Savings',          color: '#14b8a6' },
+  { id: 'cat-emergency',    name: 'Emergency Fund',   color: '#2dd4bf' },
+  { id: 'cat-investments',  name: 'Investments',      color: '#34d399' },
+  { id: 'cat-debt',         name: 'Debt Payments',    color: '#f87171' },
+  { id: 'cat-giving',       name: 'Giving',           color: '#fb7185' },
+  { id: 'cat-income',       name: 'Income',           color: '#22c55e' },
+  { id: 'cat-other',        name: 'Uncategorized',    color: '#94a3b8' },
 ]
 
 export const EMPTY_APP_DATA: AppData = {
   transactions: [],
   budgetGoals: [],
   categories: DEFAULT_CATEGORIES,
-  monthlyIncome: {}
+  monthlyIncome: {},
+  savingsBalance: 0,
 }
 
 export function generateId(): string {
@@ -64,21 +80,35 @@ export function guessCategory(description: string): string {
   if (/^external deposit|^deposit/.test(d) && !/transfer/.test(d)) return 'Income'
   // Savings / transfers
   if (/transfer|savings|zelle|venmo|paypal|cash.?app/.test(d)) return 'Savings'
+  // Groceries (specific stores before general Food & Dining)
+  if (/kroger|meijer|aldi|trader.?joe|whole.?foods|publix|safeway|wegmans|sprouts/.test(d)) return 'Groceries'
   // Food & Dining
   if (/starbucks|mcdonald|mcdonalds|burger|smoothie|sonic|dairy.?queen|pizza|subway|dunkin|taco|chipotle|deli|cafe|coffee|donut|panera|chick.?fil|popeyes|wendy|arby|kfc|buffalo.?wild|grubhub|doordash|ubereats|domino|little.?caesar|olive.?garden|applebee|ihop|denny|culver|qdoba|five.?guys|jimmy.?john|firehouse|potbelly|canes|raising/.test(d)) return 'Food & Dining'
-  // Transportation / Gas
-  if (/shell.?oil|shell\s|speedway|marathon|sunoco|circle.?k|kwik|bp\s|exxon|chevron|mobil|meijer.?gas|fuel|jiffy.?lube|midas|car.?wash|auto.?zone|o'reilly|napa.?auto|parking|uber\s|lyft/.test(d)) return 'Transportation'
+  // Gas
+  if (/shell.?oil|shell\s|speedway|marathon|sunoco|circle.?k|kwik|bp\s|exxon|chevron|mobil|meijer.?gas|fuel/.test(d)) return 'Gas'
+  // Transportation
+  if (/jiffy.?lube|midas|car.?wash|auto.?zone|o'reilly|napa.?auto|parking|uber\s|lyft/.test(d)) return 'Transportation'
+  // Subscriptions (before Entertainment to catch streaming)
+  if (/spotify|netflix|hulu|disney\+|hbo|apple.*bill|google.?play|youtube.*premium|amazon.*prime|paramount|peacock/.test(d)) return 'Subscriptions'
   // Entertainment
-  if (/spotify|netflix|hulu|disney|hbo|apple.*bill|google.?play|steam|xbox|playstation|ticketmaster|amc\s|microsoft.*store|youtube.*premium|amazon.*prime|paramount|peacock/.test(d)) return 'Entertainment'
+  if (/steam|xbox|playstation|ticketmaster|amc\s|microsoft.*store/.test(d)) return 'Entertainment'
   // Utilities
   if (/\bdte\b|consumers.?energy|xcel|at&t|verizon|comcast|spectrum|t-mobile|tmobile|internet|electric|water.?bill/.test(d)) return 'Utilities'
   // Healthcare
   if (/hospital|clinic|pharmacy|dental|vision|urgent.?care|medical|walgreen|cvs|rite.?aid|health/.test(d)) return 'Healthcare'
+  // Gym & Fitness
+  if (/planet.?fitness|anytime.?fitness|ymca|gym|crossfit|la.?fitness/.test(d)) return 'Gym & Fitness'
+  // Pets
+  if (/petsmart|petco|chewy|veterinar|vet\s/.test(d)) return 'Pets'
   // Shopping
-  if (/target|walmart|amazon|costco|sam.?s.?club|dollar.?general|dollar.?tree|family.?dollar|tj.?maxx|marshalls|macy|kohl|best.?buy|home.?depot|lowes|kroger|meijer|aldi|trader.?joe|whole.?foods|ikea|chewy|wayfair/.test(d)) return 'Shopping'
+  if (/target|walmart|amazon|costco|sam.?s.?club|dollar.?general|dollar.?tree|family.?dollar|tj.?maxx|marshalls|macy|kohl|best.?buy|home.?depot|lowes|ikea|wayfair/.test(d)) return 'Shopping'
   // Housing
   if (/rent|mortgage|hoa|apartment/.test(d)) return 'Housing'
-  return 'Other'
+  // Insurance
+  if (/insurance|geico|progressive|allstate|state.?farm|usaa/.test(d)) return 'Insurance'
+  // Giving
+  if (/church|tithe|donation|charity|nonprofit/.test(d)) return 'Giving'
+  return 'Uncategorized'
 }
 
 function parseCsvLine(line: string): string[] {
