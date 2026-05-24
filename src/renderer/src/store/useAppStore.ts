@@ -113,6 +113,14 @@ export function useAppStore() {
     [data, save]
   )
 
+  const setMonthlyIncome = useCallback(
+    (month: string, amount: number) => {
+      const next = { ...data, monthlyIncome: { ...data.monthlyIncome, [month]: amount } }
+      save(next)
+    },
+    [data, save]
+  )
+
   const importTransactions = useCallback(
     (transactions: Omit<Transaction, 'id'>[]) => {
       const withIds = transactions.map((t) => ({ ...t, id: generateId() }))
@@ -131,6 +139,7 @@ export function useAppStore() {
     upsertBudgetGoal,
     deleteBudgetGoal,
     addCategory,
-    importTransactions
+    importTransactions,
+    setMonthlyIncome
   }
 }

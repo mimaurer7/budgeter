@@ -28,6 +28,7 @@ export interface AppData {
   transactions: Transaction[]
   budgetGoals: BudgetGoal[]
   categories: Category[]
+  monthlyIncome: Record<string, number>  // YYYY-MM -> planned income amount
 }
 
 export type Page = 'dashboard' | 'transactions' | 'budget' | 'charts' | 'import'

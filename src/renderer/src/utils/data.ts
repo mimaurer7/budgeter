@@ -16,7 +16,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
 export const EMPTY_APP_DATA: AppData = {
   transactions: [],
   budgetGoals: [],
-  categories: DEFAULT_CATEGORIES
+  categories: DEFAULT_CATEGORIES,
+  monthlyIncome: {}
 }
 
 export function generateId(): string {
