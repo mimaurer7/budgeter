@@ -68,7 +68,6 @@ export default function Import({ store }: Props) {
         return
       }
 
-      // Deduplicate against existing transactions
       const existingKeys = new Set(
         data.transactions.map((t) => txKey(t.date, t.description, t.amount))
       )
@@ -98,51 +97,49 @@ export default function Import({ store }: Props) {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-2">Import CSV</h1>
-      <p className="text-gray-400 text-sm mb-6">
+      <p className="text-sm mb-6" style={{ color: '#8a89a8' }}>
         Upload your bank's CSV export. Duplicate transactions are automatically skipped.
       </p>
 
       {importResult && (
-        <div className="mb-4 bg-green-900/30 border border-green-700 rounded-lg px-4 py-3 text-green-400 text-sm">
+        <div className="mb-4 rounded-xl px-4 py-3 text-sm"
+          style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#16a34a' }}>
           Imported {importResult.imported} transaction{importResult.imported !== 1 ? 's' : ''}.
           {importResult.dupes > 0 && (
-            <span className="text-gray-400 ml-1">({importResult.dupes} duplicates skipped)</span>
+            <span className="ml-1" style={{ color: '#8a89a8' }}>({importResult.dupes} duplicates skipped)</span>
           )}
         </div>
       )}
       {error && (
-        <div className="mb-4 bg-red-900/30 border border-red-700 rounded-lg px-4 py-3 text-red-400 text-sm">
+        <div className="mb-4 rounded-xl px-4 py-3 text-sm"
+          style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626' }}>
           {error}
         </div>
       )}
 
-      <button
-        onClick={handlePickFile}
-        className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
-      >
+      <button onClick={handlePickFile} className="btn-primary px-4 py-2 text-sm">
         Choose CSV File
       </button>
 
       {preview.length > 0 && (
-        <div className="mt-6 bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
+        <div className="mt-6 card card-glow overflow-hidden">
+          <div className="px-4 py-3 flex justify-between items-center" style={{ borderBottom: '1px solid #eae9f5' }}>
             <div>
-              <span className="text-sm font-medium">{preview.length} new transactions</span>
+              <span className="text-sm font-medium" style={{ color: '#1e1d2e' }}>{preview.length} new transactions</span>
               {skipped > 0 && (
-                <span className="text-xs text-gray-500 ml-2">({skipped} duplicates/blank rows skipped)</span>
+                <span className="text-xs ml-2" style={{ color: '#aeadcc' }}>({skipped} duplicates/blank rows skipped)</span>
               )}
             </div>
-            <button
-              onClick={handleImport}
-              className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
-            >
+            <button onClick={handleImport}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-white"
+              style={{ background: '#16a34a' }}>
               Import All
             </button>
           </div>
           <div className="overflow-x-auto max-h-96 overflow-y-auto">
             <table className="w-full text-xs">
-              <thead className="sticky top-0 bg-gray-900 border-b border-gray-800">
-                <tr className="text-gray-400 text-left">
+              <thead style={{ borderBottom: '1px solid #eae9f5' }}>
+                <tr className="text-left" style={{ color: '#8a89a8' }}>
                   <th className="px-4 py-2 font-medium">Date</th>
                   <th className="px-4 py-2 font-medium">Description</th>
                   <th className="px-4 py-2 font-medium">Type</th>
@@ -151,15 +148,20 @@ export default function Import({ store }: Props) {
               </thead>
               <tbody>
                 {preview.map((r, i) => (
-                  <tr key={i} className="border-b border-gray-800 last:border-0">
-                    <td className="px-4 py-2 text-gray-400">{formatDate(r.date)}</td>
-                    <td className="px-4 py-2 text-gray-200">{r.description}</td>
+                  <tr key={i} style={{ borderBottom: '1px solid #f0eff5' }}>
+                    <td className="px-4 py-2" style={{ color: '#8a89a8' }}>{formatDate(r.date)}</td>
+                    <td className="px-4 py-2" style={{ color: '#1e1d2e' }}>{r.description}</td>
                     <td className="px-4 py-2">
-                      <span className={`px-2 py-0.5 rounded-full ${r.type === 'income' ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
+                      <span className="px-2 py-0.5 rounded-full text-xs"
+                        style={{
+                          background: r.type === 'income' ? '#f0fdf4' : '#fef2f2',
+                          color: r.type === 'income' ? '#16a34a' : '#dc2626'
+                        }}>
                         {r.type}
                       </span>
                     </td>
-                    <td className={`px-4 py-2 text-right font-medium ${r.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                    <td className="px-4 py-2 text-right font-medium"
+                      style={{ color: r.type === 'income' ? '#16a34a' : '#dc2626' }}>
                       {formatCurrency(r.amount)}
                     </td>
                   </tr>

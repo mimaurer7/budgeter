@@ -25,10 +25,10 @@ function shortDate(dateStr: string): { top: string; bottom: string } {
   }
 }
 
-const inputCls = "w-full px-3 py-2 text-sm rounded-xl focus:outline-none focus:border-indigo-500"
-const inputStyle = { background: '#0e0e18', border: '1px solid #1e1e2e', color: '#d0d0f0' }
+const inputCls = "w-full px-3 py-2 text-sm rounded-xl focus:outline-none"
+const inputStyle = { background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#1e1d2e' }
 const labelCls = "text-xs font-medium mb-1 block"
-const labelStyle = { color: '#5a5a7a' }
+const labelStyle = { color: '#8a89a8' }
 
 export default function Transactions({ store }: Props) {
   const { data, addTransaction, updateTransaction, deleteTransaction } = store
@@ -57,7 +57,7 @@ export default function Transactions({ store }: Props) {
     setShowForm(false)
   }
 
-  const catColor = (name: string) => data.categories.find(c => c.name === name)?.color ?? '#5a5a7a'
+  const catColor = (name: string) => data.categories.find(c => c.name === name)?.color ?? '#8a89a8'
 
   return (
     <div className="p-8">
@@ -70,16 +70,16 @@ export default function Transactions({ store }: Props) {
 
       <input type="text" placeholder="Search by description or category..."
         value={filter} onChange={(e) => setFilter(e.target.value)}
-        className="w-full mb-4 px-4 py-2.5 text-sm rounded-xl focus:outline-none focus:border-indigo-500"
-        style={{ background: '#0e0e18', border: '1px solid #1e1e2e', color: '#d0d0f0' }} />
+        className="w-full mb-4 px-4 py-2.5 text-sm rounded-xl focus:outline-none"
+        style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#1e1d2e' }} />
 
       <div className="card card-glow overflow-hidden">
         {sorted.length === 0 ? (
-          <p className="p-6 text-sm" style={{ color: '#3a3a5a' }}>No transactions found.</p>
+          <p className="p-6 text-sm" style={{ color: '#aeadcc' }}>No transactions found.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead style={{ borderBottom: '1px solid #1a1a2e' }}>
-              <tr className="text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#4a4a6a' }}>
+            <thead style={{ borderBottom: '1px solid #eae9f5' }}>
+              <tr className="text-left text-xs font-semibold uppercase tracking-wide" style={{ color: '#8a89a8' }}>
                 <th className="px-4 py-3 w-24">Date</th>
                 <th className="px-4 py-3">Description</th>
                 <th className="px-4 py-3 w-36">Category</th>
@@ -91,16 +91,15 @@ export default function Transactions({ store }: Props) {
               {sorted.map((t) => {
                 const { top, bottom } = shortDate(t.date)
                 return (
-                  <tr key={t.id} className="transition-colors" style={{ borderBottom: '1px solid #13131f' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#111118')}
+                  <tr key={t.id} className="transition-colors" style={{ borderBottom: '1px solid #f0eff5' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#fafaf8')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    {/* Compact date */}
                     <td className="px-4 py-3 w-24">
-                      <p className="text-xs font-medium" style={{ color: '#a0a0c0' }}>{top}</p>
-                      <p className="text-xs" style={{ color: '#3a3a5a' }}>{bottom}</p>
+                      <p className="text-xs font-medium" style={{ color: '#3c3b58' }}>{top}</p>
+                      <p className="text-xs" style={{ color: '#aeadcc' }}>{bottom}</p>
                     </td>
                     <td className="px-4 py-3 max-w-xs">
-                      <p className="truncate" style={{ color: '#d0d0f0' }}>{t.description}</p>
+                      <p className="truncate" style={{ color: '#1e1d2e' }}>{t.description}</p>
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs"
@@ -110,15 +109,19 @@ export default function Transactions({ store }: Props) {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right font-semibold"
-                      style={{ color: t.type === 'income' ? '#22c55e' : '#ef4444' }}>
+                      style={{ color: t.type === 'income' ? '#16a34a' : '#dc2626' }}>
                       {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2 justify-end">
                         <button onClick={() => openEdit(t)} className="text-xs px-2 py-1 rounded-lg transition-colors"
-                          style={{ color: '#6a6a8a' }} onMouseEnter={e => ((e.target as HTMLElement).style.color = '#a0a0d0')} onMouseLeave={e => ((e.target as HTMLElement).style.color = '#6a6a8a')}>Edit</button>
+                          style={{ color: '#8a89a8' }}
+                          onMouseEnter={e => ((e.target as HTMLElement).style.color = '#3c3b58')}
+                          onMouseLeave={e => ((e.target as HTMLElement).style.color = '#8a89a8')}>Edit</button>
                         <button onClick={() => deleteTransaction(t.id)} className="text-xs px-2 py-1 rounded-lg transition-colors"
-                          style={{ color: '#6a2a2a' }} onMouseEnter={e => ((e.target as HTMLElement).style.color = '#ef4444')} onMouseLeave={e => ((e.target as HTMLElement).style.color = '#6a2a2a')}>Delete</button>
+                          style={{ color: '#c0b0b0' }}
+                          onMouseEnter={e => ((e.target as HTMLElement).style.color = '#dc2626')}
+                          onMouseLeave={e => ((e.target as HTMLElement).style.color = '#c0b0b0')}>Delete</button>
                       </div>
                     </td>
                   </tr>
@@ -130,19 +133,22 @@ export default function Transactions({ store }: Props) {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(0,0,0,0.7)' }}>
-          <form onSubmit={handleSubmit} className="card card-glow p-6 w-full max-w-md space-y-4"
-            style={{ background: 'linear-gradient(145deg, #14141f, #0f0f1a)' }}>
-            <h2 className="text-lg font-semibold">{editing ? 'Edit Transaction' : 'Add Transaction'}</h2>
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(30,29,46,0.4)' }}>
+          <form onSubmit={handleSubmit} className="card card-glow p-6 w-full max-w-md space-y-4">
+            <h2 className="text-lg font-semibold" style={{ color: '#1e1d2e' }}>{editing ? 'Edit Transaction' : 'Add Transaction'}</h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelCls} style={labelStyle}>Date</label>
-                <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputCls} style={inputStyle} />
+                <input type="date" required value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className={inputCls} style={inputStyle} />
               </div>
               <div>
                 <label className={labelCls} style={labelStyle}>Type</label>
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as 'income' | 'expense' })} className={inputCls} style={inputStyle}>
+                <select value={form.type}
+                  onChange={(e) => setForm({ ...form, type: e.target.value as 'income' | 'expense' })}
+                  className={inputCls} style={inputStyle}>
                   <option value="expense">Expense</option>
                   <option value="income">Income</option>
                 </select>
@@ -151,18 +157,23 @@ export default function Transactions({ store }: Props) {
 
             <div>
               <label className={labelCls} style={labelStyle}>Description</label>
-              <input type="text" required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={inputCls} style={inputStyle} />
+              <input type="text" required value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                className={inputCls} style={inputStyle} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelCls} style={labelStyle}>Amount ($)</label>
                 <input type="number" required min="0.01" step="0.01" value={form.amount || ''}
-                  onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} className={inputCls} style={inputStyle} />
+                  onChange={(e) => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })}
+                  className={inputCls} style={inputStyle} />
               </div>
               <div>
                 <label className={labelCls} style={labelStyle}>Category</label>
-                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={inputCls} style={inputStyle}>
+                <select value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className={inputCls} style={inputStyle}>
                   <option value="">Select...</option>
                   {data.categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                 </select>
@@ -171,14 +182,20 @@ export default function Transactions({ store }: Props) {
 
             <div>
               <label className={labelCls} style={labelStyle}>Notes (optional)</label>
-              <input type="text" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={inputCls} style={inputStyle} />
+              <input type="text" value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                className={inputCls} style={inputStyle} />
             </div>
 
             <div className="flex gap-3 pt-2">
-              <button type="submit" className="btn-primary flex-1 py-2.5 text-sm">{editing ? 'Save Changes' : 'Add Transaction'}</button>
+              <button type="submit" className="btn-primary flex-1 py-2.5 text-sm">
+                {editing ? 'Save Changes' : 'Add Transaction'}
+              </button>
               <button type="button" onClick={() => setShowForm(false)}
-                className="flex-1 py-2.5 text-sm rounded-xl font-medium transition-colors"
-                style={{ background: '#1a1a2e', color: '#8888aa', border: '1px solid #2a2a3e' }}>Cancel</button>
+                className="flex-1 py-2.5 text-sm rounded-xl font-medium"
+                style={{ background: '#f0eff8', color: '#8a89a8', border: '1px solid #d5d4e8' }}>
+                Cancel
+              </button>
             </div>
           </form>
         </div>

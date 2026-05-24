@@ -92,7 +92,6 @@ export default function Budget({ store }: Props) {
   const visibleCategories = data.categories.filter((c) => c.name !== 'Income' && !c.hidden)
   const allManageCategories = data.categories.filter((c) => c.name !== 'Income')
   const allCategoryNames = data.categories.map((c) => c.name)
-
   const uncategorizedCount = (txnsByCategory['Uncategorized'] ?? []).filter(t => t.type === 'expense').length
 
   const monthLabel = new Date(month + '-02').toLocaleString('en-US', { month: 'long', year: 'numeric' })
@@ -108,77 +107,73 @@ export default function Budget({ store }: Props) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Budget</h1>
-          <p className="text-sm mt-0.5" style={{ color: '#5a5a7a' }}>{monthLabel}</p>
+          <p className="text-sm mt-0.5" style={{ color: '#8a89a8' }}>{monthLabel}</p>
         </div>
         <div className="flex items-center gap-3">
           {hasPrevGoals && (
-            <button
-              onClick={() => copyBudgetFromLastMonth(month)}
+            <button onClick={() => copyBudgetFromLastMonth(month)}
               className="text-xs px-3 py-2 rounded-xl transition-colors"
-              style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', color: '#6a6a9a' }}
-              title="Copy budget goals from last month">
+              style={{ background: '#f0eff8', border: '1px solid #d5d4e8', color: '#6a68a8' }}>
               Copy Last Month
             </button>
           )}
-          <button
-            onClick={() => setShowManage(!showManage)}
+          <button onClick={() => setShowManage(!showManage)}
             className="text-xs px-3 py-2 rounded-xl transition-colors"
-            style={{ background: showManage ? '#6366f1' : '#1a1a2e', border: '1px solid #2a2a3e', color: showManage ? 'white' : '#6a6a9a' }}>
+            style={{ background: showManage ? '#6366f1' : '#f0eff8', border: '1px solid #d5d4e8', color: showManage ? 'white' : '#6a68a8' }}>
             Manage Categories
           </button>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)}
             className="px-3 py-2 text-sm rounded-xl focus:outline-none"
-            style={{ background: '#12121e', border: '1px solid #1e1e2e', color: '#a0a0c0' }} />
+            style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#3c3b58' }} />
         </div>
       </div>
 
       {/* Category management panel */}
       {showManage && (
         <div className="card card-glow p-5 mb-6">
-          <h2 className="font-semibold mb-4" style={{ color: '#c0c0e0' }}>Manage Categories</h2>
+          <h2 className="font-semibold mb-4" style={{ color: '#3c3b58' }}>Manage Categories</h2>
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#4a4a6a' }}>Show / Hide</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#8a89a8' }}>Show / Hide</p>
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {allManageCategories.map((cat) => (
                   <div key={cat.id} className="flex items-center justify-between py-1.5 px-3 rounded-lg"
-                    style={{ background: '#0e0e18' }}>
+                    style={{ background: '#f5f4f8', border: '1px solid #eae9f5' }}>
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className="w-3 h-3 rounded-full shrink-0" style={{ background: cat.color }} />
-                      <span className="text-sm truncate" style={{ color: cat.hidden ? '#3a3a5a' : '#c0c0e0' }}>{cat.name}</span>
+                      <span className="text-sm truncate" style={{ color: cat.hidden ? '#aeadcc' : '#3c3b58' }}>{cat.name}</span>
                       {cat.custom && (
-                        <span className="text-xs px-1.5 py-0.5 rounded shrink-0" style={{ background: '#1e1e3a', color: '#6366f1', fontSize: '10px' }}>custom</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded shrink-0" style={{ background: '#ebe9ff', color: '#6366f1', fontSize: '10px' }}>custom</span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-2">
                       {confirmDeleteId === cat.id ? (
                         <>
-                          <span className="text-xs" style={{ color: '#f87171' }}>Delete?</span>
+                          <span className="text-xs" style={{ color: '#dc2626' }}>Delete?</span>
                           <button onClick={() => { deleteCategory(cat.id); setConfirmDeleteId(null) }}
                             className="text-xs px-2 py-1 rounded-lg"
-                            style={{ background: '#7f1d1d', color: '#fca5a5', border: '1px solid #ef4444' }}>Yes</button>
+                            style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5' }}>Yes</button>
                           <button onClick={() => setConfirmDeleteId(null)}
                             className="text-xs px-2 py-1 rounded-lg"
-                            style={{ background: '#1a1a2e', color: '#6a6a8a', border: '1px solid #2a2a3e' }}>No</button>
+                            style={{ background: '#f0eff8', color: '#8a89a8', border: '1px solid #d5d4e8' }}>No</button>
                         </>
                       ) : (
                         <>
-                          <button
-                            onClick={() => toggleCategoryVisibility(cat.id)}
+                          <button onClick={() => toggleCategoryVisibility(cat.id)}
                             className="text-xs px-2 py-1 rounded-lg transition-colors"
                             style={{
-                              background: cat.hidden ? '#1a1a2e' : '#1a2a1a',
-                              color: cat.hidden ? '#4a4a6a' : '#22c55e',
-                              border: `1px solid ${cat.hidden ? '#2a2a3e' : '#166534'}`
+                              background: cat.hidden ? '#f0eff8' : '#f0fdf4',
+                              color: cat.hidden ? '#8a89a8' : '#16a34a',
+                              border: `1px solid ${cat.hidden ? '#d5d4e8' : '#bbf7d0'}`
                             }}>
                             {cat.hidden ? 'Hidden' : 'Visible'}
                           </button>
                           {cat.custom && (
                             <button onClick={() => setConfirmDeleteId(cat.id)}
                               className="text-xs px-2 py-1 rounded-lg transition-colors"
-                              style={{ background: '#1a1a2e', color: '#6a3a3a', border: '1px solid #2a1a1a' }}
-                              onMouseEnter={e => ((e.target as HTMLElement).style.color = '#ef4444')}
-                              onMouseLeave={e => ((e.target as HTMLElement).style.color = '#6a3a3a')}>
+                              style={{ background: '#f0eff8', color: '#c0a0a0', border: '1px solid #e8d8d8' }}
+                              onMouseEnter={e => ((e.target as HTMLElement).style.color = '#dc2626')}
+                              onMouseLeave={e => ((e.target as HTMLElement).style.color = '#c0a0a0')}>
                               Delete
                             </button>
                           )}
@@ -191,48 +186,42 @@ export default function Budget({ store }: Props) {
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#4a4a6a' }}>Add Custom Category</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: '#8a89a8' }}>Add Custom Category</p>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs mb-1 block" style={{ color: '#5a5a7a' }}>Name</label>
-                  <input
-                    type="text"
-                    value={newCatName}
+                  <label className="text-xs mb-1 block" style={{ color: '#8a89a8' }}>Name</label>
+                  <input type="text" value={newCatName}
                     onChange={(e) => setNewCatName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addCustomCategory()}
                     placeholder="e.g. Hobbies"
-                    className="w-full px-3 py-2 text-sm rounded-xl focus:outline-none focus:border-indigo-500"
-                    style={{ background: '#0e0e18', border: '1px solid #1e1e2e', color: '#d0d0f0' }} />
+                    className="w-full px-3 py-2 text-sm rounded-xl focus:outline-none"
+                    style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#1e1d2e' }} />
                 </div>
                 <div>
-                  <label className="text-xs mb-1 block" style={{ color: '#5a5a7a' }}>Color</label>
+                  <label className="text-xs mb-1 block" style={{ color: '#8a89a8' }}>Color</label>
                   <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={newCatColor}
+                    <input type="color" value={newCatColor}
                       onChange={(e) => setNewCatColor(e.target.value)}
                       className="w-10 h-10 rounded-lg cursor-pointer"
-                      style={{ background: 'none', border: '1px solid #2a2a3e', padding: '2px' }} />
-                    <span className="text-sm font-mono" style={{ color: '#6a6a9a' }}>{newCatColor}</span>
+                      style={{ border: '1px solid #d5d4e8', padding: '2px' }} />
+                    <span className="text-sm font-mono" style={{ color: '#8a89a8' }}>{newCatColor}</span>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs mb-2 block" style={{ color: '#5a5a7a' }}>Quick colors</label>
+                  <label className="text-xs mb-2 block" style={{ color: '#8a89a8' }}>Quick colors</label>
                   <div className="flex flex-wrap gap-2">
                     {['#6366f1','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899','#0ea5e9','#22c55e','#f97316','#84cc16','#14b8a6','#fb7185'].map((c) => (
                       <button key={c} onClick={() => setNewCatColor(c)}
                         className="w-6 h-6 rounded-full transition-transform hover:scale-110"
-                        style={{ background: c, outline: newCatColor === c ? `2px solid white` : 'none', outlineOffset: '2px' }} />
+                        style={{ background: c, outline: newCatColor === c ? `2px solid #6366f1` : 'none', outlineOffset: '2px' }} />
                     ))}
                   </div>
                 </div>
-                <button
-                  onClick={addCustomCategory}
-                  disabled={!newCatName.trim()}
-                  className="w-full py-2 text-sm rounded-xl font-medium transition-colors"
+                <button onClick={addCustomCategory} disabled={!newCatName.trim()}
+                  className="w-full py-2 text-sm rounded-xl font-medium"
                   style={{
-                    background: newCatName.trim() ? '#6366f1' : '#1a1a2e',
-                    color: newCatName.trim() ? 'white' : '#3a3a5a',
+                    background: newCatName.trim() ? '#6366f1' : '#eae9f5',
+                    color: newCatName.trim() ? 'white' : '#aeadcc',
                     cursor: newCatName.trim() ? 'pointer' : 'not-allowed'
                   }}>
                   Add Category
@@ -245,9 +234,8 @@ export default function Budget({ store }: Props) {
 
       {/* Uncategorized prompt */}
       {uncategorizedCount > 0 && (
-        <div
-          className="flex items-center justify-between px-5 py-3 rounded-xl mb-4 cursor-pointer"
-          style={{ background: '#1a1510', border: '1px solid #3a2a10' }}
+        <div className="flex items-center justify-between px-5 py-3 rounded-xl mb-4 cursor-pointer"
+          style={{ background: '#fffbeb', border: '1px solid #fcd34d' }}
           onClick={() => {
             setExpandedCategory(prev => prev === 'Uncategorized' ? null : 'Uncategorized')
             setTimeout(() => {
@@ -255,12 +243,12 @@ export default function Budget({ store }: Props) {
             }, 50)
           }}>
           <div className="flex items-center gap-3">
-            <span style={{ color: '#f59e0b' }}>⚠</span>
-            <span className="text-sm font-medium" style={{ color: '#c0a060' }}>
+            <span style={{ color: '#d97706' }}>⚠</span>
+            <span className="text-sm font-medium" style={{ color: '#92400e' }}>
               {uncategorizedCount} transaction{uncategorizedCount !== 1 ? 's' : ''} in <strong>Uncategorized</strong> this month
             </span>
           </div>
-          <span className="text-xs px-3 py-1 rounded-lg" style={{ background: '#2a1e08', color: '#f59e0b' }}>
+          <span className="text-xs px-3 py-1 rounded-lg" style={{ background: '#fef3c7', color: '#d97706' }}>
             Review →
           </span>
         </div>
@@ -270,68 +258,67 @@ export default function Budget({ store }: Props) {
       <div className="card card-glow p-6 mb-6">
         <div className="grid grid-cols-3 gap-8 mb-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#4a4a6a' }}>Monthly Income</p>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#8a89a8' }}>Monthly Income</p>
             {editingIncome ? (
               <div className="flex items-center gap-2">
-                <span style={{ color: '#5a5a7a' }}>$</span>
-                <input type="number" value={incomeInput} min="0" step="0.01"
+                <span style={{ color: '#8a89a8' }}>$</span>
+                <input type="number" value={incomeInput} min="0" step="0.01" autoFocus
                   onChange={(e) => setIncomeInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') saveIncome(); if (e.key === 'Escape') setEditingIncome(false) }}
-                  autoFocus
                   className="w-36 px-2 py-1 text-sm rounded-lg focus:outline-none"
-                  style={{ background: '#0e0e18', border: '1px solid #6366f1', color: '#d0d0f0' }} />
+                  style={{ background: '#f5f4f8', border: '1px solid #6366f1', color: '#1e1d2e' }} />
                 <button onClick={saveIncome} className="text-xs px-2 py-1 rounded-lg" style={{ background: '#6366f1', color: 'white' }}>Save</button>
-                <button onClick={() => setEditingIncome(false)} className="text-xs" style={{ color: '#5a5a7a' }}>Cancel</button>
+                <button onClick={() => setEditingIncome(false)} className="text-xs" style={{ color: '#8a89a8' }}>Cancel</button>
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold" style={{ color: '#22c55e' }}>{formatCurrency(plannedIncome)}</span>
+                <span className="text-2xl font-bold" style={{ color: '#16a34a' }}>{formatCurrency(plannedIncome)}</span>
                 <button onClick={() => { setIncomeInput(String(plannedIncome)); setEditingIncome(true) }}
-                  className="text-xs px-2 py-1 rounded-lg transition-colors"
-                  style={{ background: '#1a1a2e', border: '1px solid #2a2a3e', color: '#6a6a8a' }}>
+                  className="text-xs px-2 py-1 rounded-lg"
+                  style={{ background: '#f0eff8', border: '1px solid #d5d4e8', color: '#8a89a8' }}>
                   Edit
                 </button>
               </div>
             )}
             {data.monthlyIncome[month] == null && actualIncome > 0 && (
-              <p className="text-xs mt-1" style={{ color: '#3a3a5a' }}>auto-filled from transactions</p>
+              <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>auto-filled from transactions</p>
             )}
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#4a4a6a' }}>Budgeted</p>
-            <span className="text-2xl font-bold" style={{ color: '#d0d0f0' }}>{formatCurrency(totalBudgeted)}</span>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#8a89a8' }}>Budgeted</p>
+            <span className="text-2xl font-bold" style={{ color: '#1e1d2e' }}>{formatCurrency(totalBudgeted)}</span>
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#4a4a6a' }}>Left to Budget</p>
-            <span className="text-2xl font-bold" style={{ color: leftToBudget < 0 ? '#ef4444' : leftToBudget === 0 ? '#22c55e' : '#f59e0b' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#8a89a8' }}>Left to Budget</p>
+            <span className="text-2xl font-bold" style={{ color: leftToBudget < 0 ? '#dc2626' : leftToBudget === 0 ? '#16a34a' : '#d97706' }}>
               {formatCurrency(leftToBudget)}
             </span>
-            {leftToBudget === 0 && <p className="text-xs mt-1" style={{ color: '#166534' }}>Every dollar has a job!</p>}
-            {leftToBudget < 0 && <p className="text-xs mt-1" style={{ color: '#7f1d1d' }}>Over by {formatCurrency(Math.abs(leftToBudget))}</p>}
+            {leftToBudget === 0 && <p className="text-xs mt-1" style={{ color: '#16a34a' }}>Every dollar has a job!</p>}
+            {leftToBudget < 0 && <p className="text-xs mt-1" style={{ color: '#dc2626' }}>Over by {formatCurrency(Math.abs(leftToBudget))}</p>}
           </div>
         </div>
 
         <div>
-          <div className="flex justify-between text-xs mb-1.5" style={{ color: '#4a4a6a' }}>
+          <div className="flex justify-between text-xs mb-1.5" style={{ color: '#8a89a8' }}>
             <span>{Math.round(allocPct)}% of income allocated</span>
             <span>{formatCurrency(totalBudgeted)} / {formatCurrency(plannedIncome)}</span>
           </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1a1a2e' }}>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: '#eae9f5' }}>
             <div className="h-full rounded-full transition-all duration-300"
               style={{
                 width: `${allocPct}%`,
-                background: leftToBudget < 0 ? '#ef4444' : leftToBudget === 0 ? '#22c55e' : 'linear-gradient(90deg, #6366f1, #8b5cf6)'
+                background: leftToBudget < 0 ? '#dc2626' : leftToBudget === 0 ? '#16a34a' : 'linear-gradient(90deg, #6366f1, #8b5cf6)'
               }} />
           </div>
         </div>
       </div>
 
-      {/* Unified category table */}
+      {/* Category table */}
       <div className="card card-glow overflow-hidden">
         <div className="grid gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wide"
-          style={{ gridTemplateColumns: '1fr 160px 160px 160px', borderBottom: '1px solid #1a1a2e', color: '#4a4a6a' }}>
+          style={{ gridTemplateColumns: '1fr 160px 160px 160px', borderBottom: '1px solid #eae9f5', color: '#8a89a8' }}>
           <span>Category</span>
           <span className="text-right">Budgeted</span>
           <span className="text-right">Spent</span>
@@ -339,7 +326,7 @@ export default function Budget({ store }: Props) {
         </div>
 
         {visibleCategories.length === 0 && (
-          <p className="px-5 py-6 text-sm" style={{ color: '#3a3a5a' }}>All categories are hidden. Use "Manage Categories" to show some.</p>
+          <p className="px-5 py-6 text-sm" style={{ color: '#aeadcc' }}>All categories are hidden. Use "Manage Categories" to show some.</p>
         )}
 
         {visibleCategories.map((cat, i) => {
@@ -355,105 +342,91 @@ export default function Budget({ store }: Props) {
           const catTxns = txnsByCategory[cat.name] ?? []
 
           return (
-            <div key={cat.id} id={`cat-row-${cat.name}`} style={{ borderBottom: isLast && !isExpanded ? 'none' : '1px solid #111118' }}>
-              {/* Main row */}
+            <div key={cat.id} id={`cat-row-${cat.name}`}
+              style={{ borderBottom: isLast && !isExpanded ? 'none' : '1px solid #f0eff5' }}>
               <div className="grid gap-4 px-5 py-4 items-center transition-colors"
                 style={{ gridTemplateColumns: '1fr 160px 160px 160px' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#0e0e18')}
+                onMouseEnter={e => (e.currentTarget.style.background = '#fafaf8')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
 
-                {/* Category name — clickable to expand */}
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => toggleExpand(cat.name)}
+                  <button onClick={() => toggleExpand(cat.name)}
                     className="flex items-center gap-3 text-left"
                     title={catTxns.length > 0 ? `${catTxns.length} transaction${catTxns.length !== 1 ? 's' : ''} — click to review` : undefined}>
                     <span className="w-3 h-3 rounded-full shrink-0" style={{ background: cat.color }} />
-                    <span className="font-medium text-sm" style={{ color: '#d0d0f0' }}>{cat.name}</span>
+                    <span className="font-medium text-sm" style={{ color: '#1e1d2e' }}>{cat.name}</span>
                     {cat.custom && (
-                      <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#1e1e3a', color: '#6366f1', fontSize: '10px' }}>custom</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#ebe9ff', color: '#6366f1', fontSize: '10px' }}>custom</span>
                     )}
                     {catTxns.length > 0 && (
-                      <span className="text-xs" style={{ color: '#3a3a5a' }}>
-                        {isExpanded ? '▲' : '▼'}
-                      </span>
+                      <span className="text-xs" style={{ color: '#aeadcc' }}>{isExpanded ? '▲' : '▼'}</span>
                     )}
                   </button>
                 </div>
 
-                {/* Budgeted — inline edit */}
                 <div className="text-right">
                   {isEditing ? (
                     <div className="flex justify-end items-center gap-1.5">
-                      <span className="text-xs" style={{ color: '#5a5a7a' }}>$</span>
-                      <input type="number" value={goalInput} min="0" step="1"
+                      <span className="text-xs" style={{ color: '#8a89a8' }}>$</span>
+                      <input type="number" value={goalInput} min="0" step="1" autoFocus
                         onChange={(e) => setGoalInput(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') saveGoal(cat.name); if (e.key === 'Escape') setEditingGoal(null) }}
-                        autoFocus
                         className="w-24 px-2 py-1 text-sm text-right rounded-lg focus:outline-none"
-                        style={{ background: '#0e0e18', border: '1px solid #6366f1', color: '#d0d0f0' }} />
+                        style={{ background: '#f5f4f8', border: '1px solid #6366f1', color: '#1e1d2e' }} />
                       <button onClick={() => saveGoal(cat.name)} className="text-xs px-1.5 py-1 rounded"
                         style={{ background: '#6366f1', color: 'white' }}>✓</button>
                     </div>
                   ) : (
                     <button onClick={() => startEditGoal(cat.name)}
                       className="text-sm font-medium rounded-lg px-2 py-1 transition-colors"
-                      style={{ color: budgeted > 0 ? '#a0a0d0' : '#3a3a5a' }}
+                      style={{ color: budgeted > 0 ? '#3c3b58' : '#aeadcc' }}
                       onMouseEnter={e => ((e.target as HTMLElement).style.color = '#6366f1')}
-                      onMouseLeave={e => ((e.target as HTMLElement).style.color = budgeted > 0 ? '#a0a0d0' : '#3a3a5a')}>
+                      onMouseLeave={e => ((e.target as HTMLElement).style.color = budgeted > 0 ? '#3c3b58' : '#aeadcc')}>
                       {budgeted > 0 ? formatCurrency(budgeted) : '+ Set goal'}
                     </button>
                   )}
                 </div>
 
-                <div className="text-right text-sm" style={{ color: spent > 0 ? '#9090b0' : '#3a3a5a' }}>
+                <div className="text-right text-sm" style={{ color: spent > 0 ? '#5a5978' : '#aeadcc' }}>
                   {spent > 0 ? formatCurrency(spent) : '—'}
                 </div>
 
                 <div className="text-right text-sm font-semibold"
-                  style={{ color: budgeted === 0 ? '#3a3a5a' : isOver ? '#ef4444' : remaining === 0 ? '#22c55e' : '#a0a0d0' }}>
+                  style={{ color: budgeted === 0 ? '#aeadcc' : isOver ? '#dc2626' : remaining === 0 ? '#16a34a' : '#3c3b58' }}>
                   {budgeted === 0 ? '—' : isOver ? `-${formatCurrency(Math.abs(remaining))}` : formatCurrency(remaining)}
                 </div>
               </div>
 
-              {/* Progress bar */}
               {budgeted > 0 && (
                 <div className="px-5 pb-3">
-                  <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1a1a2e' }}>
+                  <div className="h-1 rounded-full overflow-hidden" style={{ background: '#eae9f5' }}>
                     <div className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${pct}%`,
-                        background: isOver ? '#ef4444' : pct >= 80 ? '#f59e0b' : '#6366f1'
-                      }} />
+                      style={{ width: `${pct}%`, background: isOver ? '#dc2626' : pct >= 80 ? '#d97706' : '#6366f1' }} />
                   </div>
                 </div>
               )}
 
-              {/* Expanded transaction list */}
               {isExpanded && (
-                <div style={{ borderTop: '1px solid #1a1a2e', background: '#0a0a14' }}>
+                <div style={{ borderTop: '1px solid #eae9f5', background: '#fafaf8' }}>
                   {catTxns.length === 0 ? (
-                    <p className="px-8 py-3 text-xs" style={{ color: '#3a3a5a' }}>No transactions this month.</p>
+                    <p className="px-8 py-3 text-xs" style={{ color: '#aeadcc' }}>No transactions this month.</p>
                   ) : (
                     catTxns.map((txn, ti) => {
                       const d = new Date(normalizeDate(txn.date) + 'T00:00:00')
                       const dateLabel = isNaN(d.getTime()) ? txn.date : d.toLocaleString('en-US', { month: 'short', day: 'numeric' })
                       return (
-                        <div key={txn.id}
-                          className="flex items-center gap-4 px-8 py-2.5"
-                          style={{ borderBottom: ti < catTxns.length - 1 ? '1px solid #111118' : 'none' }}>
-                          <span className="text-xs w-14 shrink-0" style={{ color: '#4a4a6a' }}>{dateLabel}</span>
-                          <span className="text-sm flex-1 truncate" style={{ color: '#b0b0d0' }}>{txn.description}</span>
+                        <div key={txn.id} className="flex items-center gap-4 px-8 py-2.5"
+                          style={{ borderBottom: ti < catTxns.length - 1 ? '1px solid #f0eff5' : 'none' }}>
+                          <span className="text-xs w-14 shrink-0" style={{ color: '#aeadcc' }}>{dateLabel}</span>
+                          <span className="text-sm flex-1 truncate" style={{ color: '#5a5978' }}>{txn.description}</span>
                           <span className="text-sm font-medium shrink-0 w-24 text-right"
-                            style={{ color: txn.type === 'income' ? '#22c55e' : '#9090b0' }}>
+                            style={{ color: txn.type === 'income' ? '#16a34a' : '#5a5978' }}>
                             {txn.type === 'income' ? '+' : ''}{formatCurrency(txn.amount)}
                           </span>
-                          {/* Quick reassign dropdown */}
-                          <select
-                            value={txn.category}
+                          <select value={txn.category}
                             onChange={(e) => updateTransaction(txn.id, { category: e.target.value })}
                             className="text-xs px-2 py-1 rounded-lg focus:outline-none shrink-0"
-                            style={{ background: '#12121e', border: '1px solid #2a2a3e', color: '#a0a0c0', maxWidth: '160px' }}>
+                            style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#3c3b58', maxWidth: '160px' }}>
                             {allCategoryNames.map((name) => (
                               <option key={name} value={name}>{name}</option>
                             ))}

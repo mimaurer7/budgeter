@@ -21,7 +21,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#08080f', color: '#e8e8f0' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: '#f5f4f1', color: '#1e1d2e' }}>
       <Sidebar activePage={page} onNavigate={setPage} />
       <main className="flex-1 overflow-y-auto">
         {page === 'dashboard' && <Dashboard store={store} />}

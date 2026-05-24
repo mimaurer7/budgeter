@@ -8,28 +8,29 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background: #08080f;
-  color: #e8e8f0;
+  background: #f5f4f1;
+  color: #1e1d2e;
 }
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2d2d42; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #c8c7e0; border-radius: 3px; }
 
 .card {
-  background: linear-gradient(145deg, #12121e, #0e0e18);
-  border: 1px solid #1e1e2e;
+  background: #ffffff;
+  border: 1px solid #eae9f5;
   border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 
 .card-glow {
-  box-shadow: 0 0 0 1px #1e1e2e, 0 4px 24px rgba(99,102,241,0.06);
+  box-shadow: 0 2px 12px rgba(99,102,241,0.07), 0 1px 3px rgba(0,0,0,0.04);
 }
 
-.stat-income  { border-top: 2px solid #22c55e; }
-.stat-expense { border-top: 2px solid #ef4444; }
+.stat-income  { border-top: 2px solid #16a34a; }
+.stat-expense { border-top: 2px solid #dc2626; }
 .stat-net     { border-top: 2px solid #6366f1; }
-.stat-neutral { border-top: 2px solid #3b82f6; }
+.stat-neutral { border-top: 2px solid #0d9488; }
 
 .btn-primary {
   background: linear-gradient(135deg, #6366f1, #7c3aed);
@@ -41,17 +42,17 @@ body {
 .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
 
 .nav-active {
-  background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(124,58,237,0.15));
+  background: rgba(99,102,241,0.12);
   border-left: 2px solid #6366f1;
-  color: #a5b4fc;
+  color: #4f46e5;
 }
 
 .nav-item {
   border-left: 2px solid transparent;
   transition: all 0.15s;
 }
-.nav-item:hover { background: rgba(255,255,255,0.04); color: #c4c4e0; }
+.nav-item:hover { background: rgba(99,102,241,0.07); color: #3c3b58; }
 
 input[type="date"], input[type="month"] {
-  color-scheme: dark;
+  color-scheme: light;
 }
