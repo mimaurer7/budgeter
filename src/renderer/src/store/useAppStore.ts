@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { AppData, Transaction, BudgetGoal, Category } from '../types'
-import { EMPTY_APP_DATA, generateId, normalizeDate } from '../utils/data'
+import { EMPTY_APP_DATA, generateId, normalizeDate, guessCategory } from '../utils/data'
 
 declare global {
   interface Window {
@@ -29,7 +29,8 @@ export function useAppStore() {
           ...saved,
           transactions: (saved.transactions ?? []).map((t) => ({
             ...t,
-            date: normalizeDate(t.date)
+            date: normalizeDate(t.date),
+            category: t.category === 'Other' ? guessCategory(t.description) : t.category
           }))
         }
         setData(migrated)

@@ -58,14 +58,24 @@ export function currentMonth(): string {
 
 export function guessCategory(description: string): string {
   const d = description.toLowerCase()
-  if (/starbucks|mcdonald|burger|restaurant|dining|smoothie|sonic|dairy.queen|pizza|subway|dunkin|taco|chipotle|deli|cafe|coffee|donut|panera|chick.fil|popeyes|wendy|arby|kfc/.test(d)) return 'Food & Dining'
-  if (/target|walmart|amazon|costco|sam.s club|dollar|tj.maxx|marshalls|macy|kohl|best.buy|home.depot|lowes|walgreen|cvs|rite.aid/.test(d)) return 'Shopping'
-  if (/shell|bp|exxon|chevron|mobil|speedway|kwik.trip|gas|fuel|auto|midas|jiffy|car.wash/.test(d)) return 'Transportation'
-  if (/netflix|spotify|hulu|disney|hbo|apple.com\/bill|google.play|steam|xbox|playstation|ticketmaster|amc/.test(d)) return 'Entertainment'
-  if (/deposit|payroll|direct dep|salary|paycheck|dte deposit/.test(d)) return 'Income'
-  if (/transfer|savings|zelle|venmo|paypal/.test(d)) return 'Savings'
-  if (/electric|consumers|dte|xcel|at&t|verizon|comcast|spectrum|t-mobile|internet|phone bill|water bill|gas bill/.test(d)) return 'Utilities'
-  if (/doctor|hospital|clinic|pharmacy|dental|vision|health|urgent care|medical/.test(d)) return 'Healthcare'
+  // Income — check before utilities so "dte ... payroll" hits here
+  if (/payroll|direct dep|active payroll|salary|paycheck/.test(d)) return 'Income'
+  if (/^external deposit|^deposit/.test(d) && !/transfer/.test(d)) return 'Income'
+  // Savings / transfers
+  if (/transfer|savings|zelle|venmo|paypal|cash.?app/.test(d)) return 'Savings'
+  // Food & Dining
+  if (/starbucks|mcdonald|mcdonalds|burger|smoothie|sonic|dairy.?queen|pizza|subway|dunkin|taco|chipotle|deli|cafe|coffee|donut|panera|chick.?fil|popeyes|wendy|arby|kfc|buffalo.?wild|grubhub|doordash|ubereats|domino|little.?caesar|olive.?garden|applebee|ihop|denny|culver|qdoba|five.?guys|jimmy.?john|firehouse|potbelly|canes|raising/.test(d)) return 'Food & Dining'
+  // Transportation / Gas
+  if (/shell.?oil|shell\s|speedway|marathon|sunoco|circle.?k|kwik|bp\s|exxon|chevron|mobil|meijer.?gas|fuel|jiffy.?lube|midas|car.?wash|auto.?zone|o'reilly|napa.?auto|parking|uber\s|lyft/.test(d)) return 'Transportation'
+  // Entertainment
+  if (/spotify|netflix|hulu|disney|hbo|apple.*bill|google.?play|steam|xbox|playstation|ticketmaster|amc\s|microsoft.*store|youtube.*premium|amazon.*prime|paramount|peacock/.test(d)) return 'Entertainment'
+  // Utilities
+  if (/\bdte\b|consumers.?energy|xcel|at&t|verizon|comcast|spectrum|t-mobile|tmobile|internet|electric|water.?bill/.test(d)) return 'Utilities'
+  // Healthcare
+  if (/hospital|clinic|pharmacy|dental|vision|urgent.?care|medical|walgreen|cvs|rite.?aid|health/.test(d)) return 'Healthcare'
+  // Shopping
+  if (/target|walmart|amazon|costco|sam.?s.?club|dollar.?general|dollar.?tree|family.?dollar|tj.?maxx|marshalls|macy|kohl|best.?buy|home.?depot|lowes|kroger|meijer|aldi|trader.?joe|whole.?foods|ikea|chewy|wayfair/.test(d)) return 'Shopping'
+  // Housing
   if (/rent|mortgage|hoa|apartment/.test(d)) return 'Housing'
   return 'Other'
 }
