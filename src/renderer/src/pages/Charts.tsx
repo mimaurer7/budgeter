@@ -19,7 +19,7 @@ const CURSOR_STYLE = { fill: 'rgba(99,102,241,0.05)' }
 export default function Charts({ store }: Props) {
   const { data } = store
   const [month, setMonth] = useState(currentMonth())
-  const [drillMonth, setDrillMonth] = useState<string | null>(null)
+  const [drillSavingsMonth, setDrillSavingsMonth] = useState<string | null>(null)
   const [drillMerchant, setDrillMerchant] = useState<string | null>(null)
 
   const transferCats = useMemo(() =>
@@ -97,13 +97,18 @@ export default function Charts({ store }: Props) {
       .slice(0, 10)
   }, [data, month, transferCats, savingsCats])
 
-  // Drill-down: all transactions for a selected month
-  const drillMonthTxns = useMemo(() => {
-    if (!drillMonth) return []
+  // Drill-down: savings-only transactions for a selected month (deposits + withdrawals)
+  const savingsDrillTxns = useMemo(() => {
+    if (!drillSavingsMonth) return []
     return [...data.transactions]
-      .filter((t) => monthKey(t.date) === drillMonth)
+      .filter((t) => {
+        if (monthKey(t.date) !== drillSavingsMonth) return false
+        if (t.type === 'expense' && savingsCats.has(t.category)) return true
+        if (t.type === 'income' && transferCats.has(t.category)) return true
+        return false
+      })
       .sort((a, b) => b.date.localeCompare(a.date))
-  }, [data.transactions, drillMonth])
+  }, [data.transactions, drillSavingsMonth, savingsCats, transferCats])
 
   // Drill-down: all-time transactions for a selected merchant, grouped by year
   const drillMerchantTxns = useMemo(() => {
@@ -129,8 +134,8 @@ export default function Charts({ store }: Props) {
 
   const totalSpend = pieData.reduce((s, d) => s + d.value, 0)
 
-  const drillMonthLabel = drillMonth
-    ? new Date(drillMonth + '-02').toLocaleString('en-US', { month: 'long', year: 'numeric' })
+  const savingsDrillLabel = drillSavingsMonth
+    ? new Date(drillSavingsMonth + '-02').toLocaleString('en-US', { month: 'long', year: 'numeric' })
     : ''
 
   return (
@@ -230,13 +235,13 @@ export default function Charts({ store }: Props) {
         {/* Monthly savings rate — click a bar to drill in */}
         <div className="card card-glow p-5">
           <h2 className="font-semibold mb-1" style={{ color: '#3c3b58' }}>Monthly Savings Rate</h2>
-          <p className="text-xs mb-4" style={{ color: '#aeadcc' }}>% of income saved · click a bar to see that month's transactions</p>
+          <p className="text-xs mb-4" style={{ color: '#aeadcc' }}>% of income saved · click a bar to see that month's savings activity</p>
           {trendData.length === 0 ? (
             <p className="text-sm" style={{ color: '#aeadcc' }}>No data yet.</p>
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={trendData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}
-                onClick={(d) => { if (d?.activePayload?.[0]) setDrillMonth(d.activePayload[0].payload.month) }}>
+                onClick={(d) => { if (d?.activePayload?.[0]) setDrillSavingsMonth(d.activePayload[0].payload.month) }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
                 <XAxis dataKey="month" tick={AXIS_STYLE} />
                 <YAxis tick={AXIS_STYLE} tickFormatter={(v) => `${v}%`} domain={['auto', 'auto']} />
@@ -274,62 +279,69 @@ export default function Charts({ store }: Props) {
         </div>
       </div>
 
-      {/* ── Drill-down: month transactions ── */}
-      {drillMonth && (
+      {/* ── Drill-down: savings activity for a month ── */}
+      {drillSavingsMonth && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(30,29,46,0.4)' }}
-          onClick={() => setDrillMonth(null)}>
+          onClick={() => setDrillSavingsMonth(null)}>
           <div className="card card-glow w-full max-w-2xl max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid #eae9f5' }}>
               <div>
-                <h2 className="font-semibold text-lg" style={{ color: '#1e1d2e' }}>{drillMonthLabel}</h2>
-                <p className="text-xs mt-0.5" style={{ color: '#8a89a8' }}>{drillMonthTxns.length} transactions</p>
+                <h2 className="font-semibold text-lg" style={{ color: '#1e1d2e' }}>{savingsDrillLabel} — Savings</h2>
+                <p className="text-xs mt-0.5" style={{ color: '#8a89a8' }}>{savingsDrillTxns.length} transaction{savingsDrillTxns.length !== 1 ? 's' : ''}</p>
               </div>
               <div className="flex items-center gap-6 text-sm mr-6">
                 {(() => {
-                  const income = drillMonthTxns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-                  const spent = drillMonthTxns.filter(t => t.type === 'expense' && !savingsCats.has(t.category)).reduce((s, t) => s + t.amount, 0)
-                  const saved = drillMonthTxns.filter(t => t.type === 'expense' && savingsCats.has(t.category)).reduce((s, t) => s + t.amount, 0)
+                  const deposited = savingsDrillTxns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+                  const withdrawn = savingsDrillTxns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+                  const net = deposited - withdrawn
                   return (
                     <>
                       <div className="text-right">
-                        <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Income</p>
-                        <p className="font-bold" style={{ color: '#16a34a' }}>{formatCurrency(income)}</p>
+                        <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Deposited</p>
+                        <p className="font-bold" style={{ color: '#0d9488' }}>{formatCurrency(deposited)}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Spent</p>
-                        <p className="font-bold" style={{ color: '#dc2626' }}>{formatCurrency(spent)}</p>
-                      </div>
-                      {saved > 0 && (
+                      {withdrawn > 0 && (
                         <div className="text-right">
-                          <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Saved</p>
-                          <p className="font-bold" style={{ color: '#0d9488' }}>{formatCurrency(saved)}</p>
+                          <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Withdrawn</p>
+                          <p className="font-bold" style={{ color: '#7c9cc0' }}>{formatCurrency(withdrawn)}</p>
                         </div>
                       )}
+                      <div className="text-right">
+                        <p className="text-xs uppercase tracking-wide" style={{ color: '#8a89a8' }}>Net</p>
+                        <p className="font-bold" style={{ color: net >= 0 ? '#0d9488' : '#dc2626' }}>
+                          {net >= 0 ? '+' : ''}{formatCurrency(net)}
+                        </p>
+                      </div>
                     </>
                   )
                 })()}
               </div>
-              <button onClick={() => setDrillMonth(null)}
+              <button onClick={() => setDrillSavingsMonth(null)}
                 className="text-xl font-light w-8 h-8 flex items-center justify-center rounded-lg"
                 style={{ color: '#8a89a8', background: '#f0eff8' }}>×</button>
             </div>
             <div className="overflow-y-auto flex-1">
-              {drillMonthTxns.map((t, i) => (
-                <div key={t.id} className="flex items-center gap-4 px-6 py-3"
-                  style={{ borderBottom: i < drillMonthTxns.length - 1 ? '1px solid #f0eff5' : 'none' }}>
-                  <span className="text-xs w-16 shrink-0" style={{ color: '#aeadcc' }}>{formatDate(t.date)}</span>
-                  <span className="text-sm flex-1 truncate" style={{ color: '#1e1d2e' }}>{t.description}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full shrink-0"
-                    style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? '#8a89a8' }}>
-                    {t.category}
-                  </span>
-                  <span className="text-sm font-semibold shrink-0 w-24 text-right"
-                    style={{ color: t.type === 'income' ? '#16a34a' : savingsCats.has(t.category) ? '#0d9488' : '#dc2626' }}>
-                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
-                  </span>
-                </div>
-              ))}
+              {savingsDrillTxns.length === 0 ? (
+                <p className="px-6 py-4 text-sm" style={{ color: '#aeadcc' }}>No savings activity this month.</p>
+              ) : savingsDrillTxns.map((t, i) => {
+                const isDeposit = t.type === 'expense'
+                const amtColor = isDeposit ? '#0d9488' : '#7c9cc0'
+                return (
+                  <div key={t.id} className="flex items-center gap-4 px-6 py-3"
+                    style={{ borderBottom: i < savingsDrillTxns.length - 1 ? '1px solid #f0eff5' : 'none' }}>
+                    <span className="text-xs w-16 shrink-0" style={{ color: '#aeadcc' }}>{formatDate(t.date)}</span>
+                    <span className="text-sm flex-1 truncate" style={{ color: '#1e1d2e' }}>{t.description}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full shrink-0"
+                      style={{ background: `${colors[t.category] ?? '#aeadcc'}18`, color: colors[t.category] ?? '#8a89a8' }}>
+                      {t.category}
+                    </span>
+                    <span className="text-sm font-semibold shrink-0 w-24 text-right" style={{ color: amtColor }}>
+                      {isDeposit ? '-' : '+'}{formatCurrency(t.amount)}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Transaction } from '../types'
 import { useAppStore } from '../store/useAppStore'
-import { formatCurrency, normalizeDate } from '../utils/data'
+import { formatCurrency, normalizeDate, monthKey } from '../utils/data'
 
 interface Props {
   store: ReturnType<typeof useAppStore>
@@ -36,14 +36,21 @@ export default function Transactions({ store }: Props) {
   const [editing, setEditing] = useState<Transaction | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [filter, setFilter] = useState('')
+  const [filterMonth, setFilterMonth] = useState('')
+  const [filterCategory, setFilterCategory] = useState('')
+  const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
+
+  const activeFilterCount = [filterMonth, filterCategory, filterType !== 'all', filter].filter(Boolean).length
 
   const sorted = [...data.transactions]
     .sort((a, b) => b.date.localeCompare(a.date))
-    .filter((t) =>
-      !filter ||
-      t.description.toLowerCase().includes(filter.toLowerCase()) ||
-      t.category.toLowerCase().includes(filter.toLowerCase())
-    )
+    .filter((t) => {
+      if (filterMonth && monthKey(t.date) !== filterMonth) return false
+      if (filterCategory && t.category !== filterCategory) return false
+      if (filterType !== 'all' && t.type !== filterType) return false
+      if (filter && !t.description.toLowerCase().includes(filter.toLowerCase()) && !t.category.toLowerCase().includes(filter.toLowerCase())) return false
+      return true
+    })
 
   function openAdd() { setEditing(null); setForm(EMPTY_FORM); setShowForm(true) }
   function openEdit(t: Transaction) {
@@ -69,10 +76,64 @@ export default function Transactions({ store }: Props) {
         </button>
       </div>
 
-      <input type="text" placeholder="Search by description or category..."
-        value={filter} onChange={(e) => setFilter(e.target.value)}
-        className="w-full mb-4 px-4 py-2.5 text-sm rounded-xl focus:outline-none"
-        style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#1e1d2e' }} />
+      <div className="flex flex-col gap-2 mb-4">
+        <input type="text" placeholder="Search by description or category..."
+          value={filter} onChange={(e) => setFilter(e.target.value)}
+          className="w-full px-4 py-2.5 text-sm rounded-xl focus:outline-none"
+          style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#1e1d2e' }} />
+
+        <div className="flex gap-2 flex-wrap items-center">
+          {/* Month filter */}
+          <div className="flex items-center gap-1">
+            <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}
+              className="px-3 py-2 text-sm rounded-xl focus:outline-none"
+              style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: filterMonth ? '#1e1d2e' : '#aeadcc' }} />
+            {filterMonth && (
+              <button onClick={() => setFilterMonth('')}
+                className="w-6 h-6 flex items-center justify-center rounded-lg text-sm"
+                style={{ color: '#8a89a8', background: '#f0eff8' }}>×</button>
+            )}
+          </div>
+
+          {/* Category filter */}
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
+            className="px-3 py-2 text-sm rounded-xl focus:outline-none"
+            style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: filterCategory ? '#1e1d2e' : '#aeadcc' }}>
+            <option value="">All Categories</option>
+            {[...data.categories]
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+          </select>
+
+          {/* Type filter */}
+          <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid #d5d4e8' }}>
+            {(['all', 'income', 'expense'] as const).map((opt, idx) => (
+              <button key={opt} onClick={() => setFilterType(opt)}
+                className="px-3 py-2 text-xs font-medium capitalize"
+                style={{
+                  background: filterType === opt ? '#6366f1' : '#f5f4f8',
+                  color: filterType === opt ? '#fff' : '#8a89a8',
+                  borderRight: idx < 2 ? '1px solid #d5d4e8' : 'none'
+                }}>
+                {opt === 'all' ? 'All' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Clear all */}
+          {activeFilterCount > 0 && (
+            <button onClick={() => { setFilter(''); setFilterMonth(''); setFilterCategory(''); setFilterType('all') }}
+              className="px-3 py-2 text-xs rounded-xl font-medium"
+              style={{ color: '#6366f1', background: '#efefff', border: '1px solid #d5d4e8' }}>
+              Clear all
+            </button>
+          )}
+
+          <span className="ml-auto text-xs" style={{ color: '#aeadcc' }}>
+            {sorted.length} transaction{sorted.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+      </div>
 
       <div className="card card-glow overflow-hidden">
         {sorted.length === 0 ? (
