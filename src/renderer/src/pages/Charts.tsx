@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
-  LineChart, Line
+  LineChart, Line, ReferenceLine
 } from 'recharts'
 import { useAppStore } from '../store/useAppStore'
 import { formatCurrency, currentMonth, monthKey } from '../utils/data'
@@ -54,8 +54,25 @@ export default function Charts({ store }: Props) {
     return Object.entries(months)
       .sort((a, b) => a[0].localeCompare(b[0]))
       .slice(-6)
-      .map(([m, v]) => ({ month: m, Income: v.income, Expenses: v.expenses }))
+      .map(([m, v]) => ({
+        month: m,
+        Income: v.income,
+        Expenses: v.expenses,
+        'Savings Rate': v.income > 0 ? Math.round(((v.income - v.expenses) / v.income) * 100) : 0
+      }))
   }, [data])
+
+  // Top merchants by total spend this month
+  const topMerchants = useMemo(() => {
+    const byDesc: Record<string, number> = {}
+    data.transactions
+      .filter((t) => t.type === 'expense' && monthKey(t.date) === month)
+      .forEach((t) => { byDesc[t.description] = (byDesc[t.description] ?? 0) + t.amount })
+    return Object.entries(byDesc)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10)
+  }, [data, month])
 
   const colors = data.categories.reduce<Record<string, string>>((acc, c) => {
     acc[c.name] = c.color; return acc
@@ -73,7 +90,7 @@ export default function Charts({ store }: Props) {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        {/* Pie chart — legend outside, no slice labels */}
+        {/* Pie chart */}
         <div className="card card-glow p-5">
           <h2 className="font-semibold mb-4" style={{ color: '#c0c0e0' }}>Spending by Category</h2>
           {pieData.length === 0 ? (
@@ -89,14 +106,13 @@ export default function Charts({ store }: Props) {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(v: number) => [formatCurrency(v), '']}
+                    formatter={(v: number, name: string) => [formatCurrency(v), name]}
                     contentStyle={CHART_STYLE}
                     labelStyle={{ color: '#a0a0c0' }}
                     itemStyle={{ color: '#d0d0f0' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
-              {/* Legend */}
               <ul className="mt-3 space-y-1.5">
                 {pieData.map((entry) => (
                   <li key={entry.name} className="flex items-center justify-between text-xs">
@@ -126,7 +142,7 @@ export default function Charts({ store }: Props) {
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
                 <XAxis dataKey="category" tick={AXIS_STYLE} />
                 <YAxis tick={AXIS_STYLE} tickFormatter={(v) => `$${v}`} />
-                <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={CHART_STYLE} itemStyle={{ color: '#d0d0f0' }} />
+                <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: '#d0d0f0' }} />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#6a6a8a' }} />
                 <Bar dataKey="Budget" fill="#4f46e5" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Spent" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -136,7 +152,7 @@ export default function Charts({ store }: Props) {
         </div>
       </div>
 
-      {/* Trend line */}
+      {/* Trend line — income vs expenses */}
       <div className="card card-glow p-5">
         <h2 className="font-semibold mb-4" style={{ color: '#c0c0e0' }}>Income vs Expenses (Last 6 Months)</h2>
         {trendData.length === 0 ? (
@@ -147,13 +163,80 @@ export default function Charts({ store }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
               <XAxis dataKey="month" tick={AXIS_STYLE} />
               <YAxis tick={AXIS_STYLE} tickFormatter={(v) => `$${v}`} />
-              <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={CHART_STYLE} />
+              <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: '#d0d0f0' }} />
               <Legend wrapperStyle={{ fontSize: 12, color: '#6a6a8a' }} />
               <Line type="monotone" dataKey="Income" stroke="#22c55e" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="Expenses" stroke="#ef4444" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        {/* Monthly savings rate */}
+        <div className="card card-glow p-5">
+          <h2 className="font-semibold mb-1" style={{ color: '#c0c0e0' }}>Monthly Savings Rate</h2>
+          <p className="text-xs mb-4" style={{ color: '#4a4a6a' }}>% of income kept after expenses</p>
+          {trendData.length === 0 ? (
+            <p className="text-sm" style={{ color: '#3a3a5a' }}>No data yet.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={trendData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
+                <XAxis dataKey="month" tick={AXIS_STYLE} />
+                <YAxis tick={AXIS_STYLE} tickFormatter={(v) => `${v}%`} domain={['auto', 'auto']} />
+                <Tooltip
+                  formatter={(v: number) => [`${v}%`, 'Savings Rate']}
+                  contentStyle={CHART_STYLE}
+                  itemStyle={{ color: '#d0d0f0' }}
+                />
+                <ReferenceLine y={0} stroke="#3a3a5a" strokeDasharray="4 4" />
+                <Bar dataKey="Savings Rate" radius={[4, 4, 0, 0]}
+                  fill="#14b8a6"
+                  label={false}>
+                  {trendData.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={entry['Savings Rate'] < 0 ? '#ef4444' : entry['Savings Rate'] < 10 ? '#f59e0b' : '#14b8a6'}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Top merchants */}
+        <div className="card card-glow p-5">
+          <h2 className="font-semibold mb-1" style={{ color: '#c0c0e0' }}>Top Merchants</h2>
+          <p className="text-xs mb-4" style={{ color: '#4a4a6a' }}>Biggest individual payees this month</p>
+          {topMerchants.length === 0 ? (
+            <p className="text-sm" style={{ color: '#3a3a5a' }}>No expense data for this month.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={topMerchants}
+                layout="vertical"
+                margin={{ top: 0, right: 60, left: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} horizontal={false} />
+                <XAxis type="number" tick={AXIS_STYLE} tickFormatter={(v) => `$${v}`} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={AXIS_STYLE}
+                  width={110}
+                  tickFormatter={(v: string) => v.length > 14 ? v.slice(0, 14) + '…' : v}
+                />
+                <Tooltip
+                  formatter={(v: number) => [formatCurrency(v), 'Amount']}
+                  contentStyle={CHART_STYLE}
+                  itemStyle={{ color: '#d0d0f0' }}
+                />
+                <Bar dataKey="amount" fill="#6366f1" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
     </div>
   )

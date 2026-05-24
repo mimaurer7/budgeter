@@ -222,7 +222,12 @@ export default function Budget({ store }: Props) {
         <div
           className="flex items-center justify-between px-5 py-3 rounded-xl mb-4 cursor-pointer"
           style={{ background: '#1a1510', border: '1px solid #3a2a10' }}
-          onClick={() => setExpandedCategory(prev => prev === 'Uncategorized' ? null : 'Uncategorized')}>
+          onClick={() => {
+            setExpandedCategory(prev => prev === 'Uncategorized' ? null : 'Uncategorized')
+            setTimeout(() => {
+              document.getElementById('cat-row-Uncategorized')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }, 50)
+          }}>
           <div className="flex items-center gap-3">
             <span style={{ color: '#f59e0b' }}>⚠</span>
             <span className="text-sm font-medium" style={{ color: '#c0a060' }}>
@@ -324,7 +329,7 @@ export default function Budget({ store }: Props) {
           const catTxns = txnsByCategory[cat.name] ?? []
 
           return (
-            <div key={cat.id} style={{ borderBottom: isLast && !isExpanded ? 'none' : '1px solid #111118' }}>
+            <div key={cat.id} id={`cat-row-${cat.name}`} style={{ borderBottom: isLast && !isExpanded ? 'none' : '1px solid #111118' }}>
               {/* Main row */}
               <div className="grid gap-4 px-5 py-4 items-center transition-colors"
                 style={{ gridTemplateColumns: '1fr 160px 160px 160px' }}
