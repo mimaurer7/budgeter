@@ -32,41 +32,49 @@ export default function Dashboard({ store }: Props) {
     [data.categories]
   )
 
+  const savingsCats = useMemo(() =>
+    new Set(data.categories.filter((c) => c.savings).map((c) => c.name)),
+    [data.categories]
+  )
+
   const monthStats = useMemo(() => {
     const txns = data.transactions.filter((t) =>
       monthKey(t.date) === activeMonth && !transferCats.has(t.category))
     const income = txns.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-    const expenses = txns.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const expenses = txns.filter((t) => t.type === 'expense' && !savingsCats.has(t.category)).reduce((s, t) => s + t.amount, 0)
+    const saved = txns.filter((t) => t.type === 'expense' && savingsCats.has(t.category)).reduce((s, t) => s + t.amount, 0)
     const byCategory: Record<string, number> = {}
-    txns.filter((t) => t.type === 'expense').forEach((t) => {
+    txns.filter((t) => t.type === 'expense' && !savingsCats.has(t.category)).forEach((t) => {
       byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount
     })
-    return { income, expenses, net: income - expenses, byCategory }
-  }, [data.transactions, activeMonth, transferCats])
+    return { income, expenses, saved, net: income - expenses - saved, byCategory }
+  }, [data.transactions, activeMonth, transferCats, savingsCats])
 
   const allTime = useMemo(() => {
     const real = data.transactions.filter((t) => !transferCats.has(t.category))
     const income = real.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-    const expenses = real.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-    const expenseCount = real.filter((t) => t.type === 'expense').length
+    const expenses = real.filter((t) => t.type === 'expense' && !savingsCats.has(t.category)).reduce((s, t) => s + t.amount, 0)
+    const saved = real.filter((t) => t.type === 'expense' && savingsCats.has(t.category)).reduce((s, t) => s + t.amount, 0)
+    const expenseCount = real.filter((t) => t.type === 'expense' && !savingsCats.has(t.category)).length
     const incomeCount = real.filter((t) => t.type === 'income').length
-    return { income, expenses, net: income - expenses, expenseCount, incomeCount }
-  }, [data.transactions, transferCats])
+    return { income, expenses, saved, net: income - expenses - saved, expenseCount, incomeCount }
+  }, [data.transactions, transferCats, savingsCats])
 
   const yearStats = useMemo(() => {
-    const map: Record<string, { income: number; expenses: number; txCount: number }> = {}
+    const map: Record<string, { income: number; expenses: number; saved: number; txCount: number }> = {}
     data.transactions
       .filter((t) => !transferCats.has(t.category))
       .forEach((t) => {
         const yr = t.date.slice(0, 4)
-        if (!map[yr]) map[yr] = { income: 0, expenses: 0, txCount: 0 }
+        if (!map[yr]) map[yr] = { income: 0, expenses: 0, saved: 0, txCount: 0 }
         if (t.type === 'income') map[yr].income += t.amount
+        else if (savingsCats.has(t.category)) map[yr].saved += t.amount
         else { map[yr].expenses += t.amount; map[yr].txCount++ }
       })
     return Object.entries(map)
       .sort((a, b) => b[0].localeCompare(a[0]))
-      .map(([year, v]) => ({ year, ...v, net: v.income - v.expenses }))
-  }, [data.transactions, transferCats])
+      .map(([year, v]) => ({ year, ...v, net: v.income - v.expenses - v.saved }))
+  }, [data.transactions, transferCats, savingsCats])
 
   const drillYearTxns = useMemo(() => {
     if (!drillYear) return []
@@ -106,10 +114,14 @@ export default function Dashboard({ store }: Props) {
       </div>
 
       {/* ── Monthly snapshot ── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <StatCard label="Income" value={formatCurrency(monthStats.income)} color="#16a34a" accent="stat-income" />
-        <StatCard label="Expenses" value={formatCurrency(monthStats.expenses)} color="#dc2626" accent="stat-expense" />
-        <StatCard label="Net" value={formatCurrency(monthStats.net)} color={monthStats.net >= 0 ? '#16a34a' : '#dc2626'} accent="stat-net" />
+        <StatCard label="Spent" value={formatCurrency(monthStats.expenses)} color="#dc2626" accent="stat-expense" />
+        <StatCard label="Saved" value={formatCurrency(monthStats.saved)} color="#0d9488" accent="stat-neutral"
+          sub={monthStats.income > 0 ? `${Math.round((monthStats.saved / monthStats.income) * 100)}% of income` : undefined} />
+        <StatCard label="Left Over" value={formatCurrency(monthStats.net)}
+          color={monthStats.net < 0 ? '#dc2626' : monthStats.net === 0 ? '#16a34a' : '#d97706'} accent="stat-net"
+          sub={monthStats.net === 0 ? 'Every dollar allocated!' : monthStats.net < 0 ? 'Over budget' : 'Unallocated'} />
       </div>
 
       {/* ── All-time summary + savings (asymmetric 2:1) ── */}
@@ -120,7 +132,7 @@ export default function Dashboard({ store }: Props) {
             <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#8a89a8' }}>All-Time Overview</p>
             {earliestDate && <span className="text-xs" style={{ color: '#aeadcc' }}>since {earliestDate}</span>}
           </div>
-          <div className="grid grid-cols-3 gap-6 mt-3">
+          <div className="grid grid-cols-4 gap-6 mt-3">
             <div>
               <p className="text-xs mb-1" style={{ color: '#8a89a8' }}>Total Earned</p>
               <p className="text-2xl font-bold" style={{ color: '#16a34a' }}>{formatCurrency(allTime.income)}</p>
@@ -132,9 +144,14 @@ export default function Dashboard({ store }: Props) {
               <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>{allTime.expenseCount} transactions</p>
             </div>
             <div>
-              <p className="text-xs mb-1" style={{ color: '#8a89a8' }}>Net Savings</p>
+              <p className="text-xs mb-1" style={{ color: '#8a89a8' }}>Total Saved</p>
+              <p className="text-2xl font-bold" style={{ color: '#0d9488' }}>{formatCurrency(allTime.saved)}</p>
+              <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>across all time</p>
+            </div>
+            <div>
+              <p className="text-xs mb-1" style={{ color: '#8a89a8' }}>Net</p>
               <p className="text-2xl font-bold" style={{ color: allTime.net >= 0 ? '#16a34a' : '#dc2626' }}>{formatCurrency(allTime.net)}</p>
-              <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>all time</p>
+              <p className="text-xs mt-1" style={{ color: '#aeadcc' }}>unallocated</p>
             </div>
           </div>
         </div>
@@ -178,10 +195,13 @@ export default function Dashboard({ store }: Props) {
                 <p className="text-2xl font-bold mb-2" style={{ color: '#1e1d2e' }}>{ys.year}</p>
                 <p className="text-xs mb-0.5" style={{ color: '#8a89a8' }}>Spent</p>
                 <p className="text-lg font-bold" style={{ color: '#dc2626' }}>{formatCurrency(ys.expenses)}</p>
+                {ys.saved > 0 && (
+                  <>
+                    <p className="text-xs mt-1 mb-0.5" style={{ color: '#8a89a8' }}>Saved</p>
+                    <p className="text-sm font-semibold" style={{ color: '#0d9488' }}>{formatCurrency(ys.saved)}</p>
+                  </>
+                )}
                 <p className="text-xs mt-2" style={{ color: '#16a34a' }}>+{formatCurrency(ys.income)} in</p>
-                <p className="text-xs" style={{ color: ys.net >= 0 ? '#16a34a' : '#dc2626' }}>
-                  {ys.net >= 0 ? '+' : ''}{formatCurrency(ys.net)} net
-                </p>
                 <p className="text-xs mt-1.5" style={{ color: '#aeadcc' }}>{ys.txCount} expenses</p>
               </button>
             ))}
@@ -274,6 +294,10 @@ export default function Dashboard({ store }: Props) {
                       <div className="text-right">
                         <p className="text-xs" style={{ color: '#8a89a8' }}>Spent</p>
                         <p className="font-bold text-sm" style={{ color: '#dc2626' }}>{formatCurrency(ys.expenses)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs" style={{ color: '#8a89a8' }}>Saved</p>
+                        <p className="font-bold text-sm" style={{ color: '#0d9488' }}>{formatCurrency(ys.saved)}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs" style={{ color: '#8a89a8' }}>Net</p>

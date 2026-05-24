@@ -25,6 +25,7 @@ export interface Category {
   hidden?: boolean
   custom?: boolean
   transfer?: boolean  // excluded from all income/expense calculations
+  savings?: boolean   // tracked separately from spending (not an expense)
 }
 
 export interface AppData {
