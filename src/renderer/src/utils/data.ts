@@ -80,14 +80,40 @@ export function guessCategory(description: string): string {
   return 'Other'
 }
 
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = []
+  let i = 0
+  while (i <= line.length) {
+    if (i === line.length) { fields.push(''); break }
+    if (line[i] === '"') {
+      let field = ''
+      i++
+      while (i < line.length) {
+        if (line[i] === '"' && line[i + 1] === '"') { field += '"'; i += 2 }
+        else if (line[i] === '"') { i++; break }
+        else { field += line[i++] }
+      }
+      fields.push(field.trim())
+      if (line[i] === ',') i++
+    } else {
+      const end = line.indexOf(',', i)
+      if (end === -1) { fields.push(line.slice(i).trim()); break }
+      fields.push(line.slice(i, end).trim())
+      i = end + 1
+    }
+  }
+  return fields
+}
+
 export function parseCSV(csvText: string): Record<string, string>[] {
-  const lines = csvText.trim().split('\n')
+  const lines = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n')
   if (lines.length < 2) return []
-  const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''))
-  return lines.slice(1).map((line) => {
-    const values = line.match(/(".*?"|[^,]+)(?=,|$)/g) ?? []
-    return Object.fromEntries(
-      headers.map((h, i) => [h, (values[i] ?? '').replace(/^"|"$/g, '').trim()])
-    )
-  })
+  const headers = parseCsvLine(lines[0])
+  return lines
+    .slice(1)
+    .filter((line) => line.trim())
+    .map((line) => {
+      const values = parseCsvLine(line)
+      return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? '']))
+    })
 }
