@@ -47,7 +47,7 @@ export function useAppStore() {
             let category = t.category
             // Re-run guesser on uncategorized and on old Savings transactions
             // that were likely internal transfers (now get routed to Transfer)
-            if (category === 'Other' || category === 'Uncategorized' || category === 'Savings') {
+            if (category === 'Other' || category === 'Uncategorized' || category === 'Savings' || category === 'Transfer') {
               category = guessCategory(t.description)
             }
             return { ...t, date: normalizeDate(t.date), category }

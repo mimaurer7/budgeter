@@ -79,10 +79,11 @@ export function guessCategory(description: string): string {
   // Income — check before utilities so "dte ... payroll" hits here
   if (/payroll|direct dep|active payroll|salary|paycheck/.test(d)) return 'Income'
   if (/^external deposit|^deposit/.test(d) && !/transfer/.test(d)) return 'Income'
-  // Internal transfers — excluded from all calculations
-  if (/\btransfer\b|zelle|venmo|paypal|cash.?app/.test(d)) return 'Transfer'
-  // Intentional savings budget item
+  // Savings BEFORE transfer so "Transfer to Savings" → Savings budget line, not hidden
   if (/\bsavings\b/.test(d)) return 'Savings'
+  // Pure internal bank-to-bank transfers — excluded from all calculations
+  // Note: Zelle/Venmo/PayPal/CashApp removed here — those are real expenses needing manual categorization
+  if (/\btransfer\b/.test(d)) return 'Transfer'
   // Groceries (specific stores before general Food & Dining)
   if (/kroger|meijer|aldi|trader.?joe|whole.?foods|publix|safeway|wegmans|sprouts/.test(d)) return 'Groceries'
   // Food & Dining
