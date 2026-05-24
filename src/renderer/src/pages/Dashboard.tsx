@@ -35,7 +35,10 @@ export default function Dashboard({ store }: Props) {
       .sort((a, b) => monthKey(b.date).localeCompare(monthKey(a.date)) || b.date.localeCompare(a.date))
       .slice(0, 5)
 
-    return { income, expenses, net, byCategory, recent }
+    const allTimeIncome = data.transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+    const allTimeExpenses = data.transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+
+    return { income, expenses, net, byCategory, recent, allTimeIncome, allTimeExpenses }
   }, [data, activeMonth])
 
   const monthLabel = new Date(activeMonth + '-02').toLocaleString('en-US', { month: 'long', year: 'numeric' })
@@ -55,7 +58,7 @@ export default function Dashboard({ store }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <StatCard label="Income" value={formatCurrency(stats.income)} color="text-green-400" />
         <StatCard label="Expenses" value={formatCurrency(stats.expenses)} color="text-red-400" />
         <StatCard
@@ -63,6 +66,12 @@ export default function Dashboard({ store }: Props) {
           value={formatCurrency(stats.net)}
           color={stats.net >= 0 ? 'text-green-400' : 'text-red-400'}
         />
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <StatCard label="All-Time Earned" value={formatCurrency(stats.allTimeIncome)} color="text-green-400" sub={`${data.transactions.filter(t => t.type === 'income').length} deposits`} />
+        <StatCard label="All-Time Spent" value={formatCurrency(stats.allTimeExpenses)} color="text-red-400" sub={`${data.transactions.filter(t => t.type === 'expense').length} transactions`} />
+        <StatCard label="Net Savings" value={formatCurrency(stats.allTimeIncome - stats.allTimeExpenses)} color={(stats.allTimeIncome - stats.allTimeExpenses) >= 0 ? 'text-green-400' : 'text-red-400'} sub="all time" />
       </div>
 
       <div className="grid grid-cols-2 gap-6">
@@ -124,11 +133,12 @@ export default function Dashboard({ store }: Props) {
   )
 }
 
-function StatCard({ label, value, color }: { label: string; value: string; color: string }) {
+function StatCard({ label, value, color, sub }: { label: string; value: string; color: string; sub?: string }) {
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
       <p className="text-gray-400 text-sm mb-1">{label}</p>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
+      {sub && <p className="text-gray-500 text-xs mt-1">{sub}</p>}
     </div>
   )
 }

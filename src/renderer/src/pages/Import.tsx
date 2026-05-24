@@ -20,17 +20,21 @@ function parseAmount(raw: string | undefined): number {
   return parseFloat(raw.replace(/[$,\s]/g, '')) || 0
 }
 
+function txKey(date: string, description: string, amount: number): string {
+  return `${date}|${description.toLowerCase().trim()}|${amount.toFixed(2)}`
+}
+
 export default function Import({ store }: Props) {
-  const { importTransactions } = store
+  const { data, importTransactions } = store
   const [preview, setPreview] = useState<ParsedRow[]>([])
-  const [imported, setImported] = useState(false)
+  const [importResult, setImportResult] = useState<{ imported: number; dupes: number } | null>(null)
   const [skipped, setSkipped] = useState(0)
   const [error, setError] = useState('')
 
   async function handlePickFile() {
     setError('')
     setPreview([])
-    setImported(false)
+    setImportResult(null)
 
     const csv = await window.api.openCsvDialog()
     if (!csv) return
@@ -44,7 +48,7 @@ export default function Import({ store }: Props) {
 
       for (const row of rows) {
         const date = normalizeDate(row['Date']?.trim() ?? '')
-        const description = row['Description']?.trim()
+        const description = row['Description']?.trim() ?? ''
         const debit = parseAmount(row['Debit'])
         const credit = parseAmount(row['Credit'])
 
@@ -64,8 +68,21 @@ export default function Import({ store }: Props) {
         return
       }
 
-      setPreview(parsed)
+      // Deduplicate against existing transactions
+      const existingKeys = new Set(
+        data.transactions.map((t) => txKey(t.date, t.description, t.amount))
+      )
+      const unique = parsed.filter((r) => !existingKeys.has(txKey(r.date, r.description, r.amount)))
+      const dupeCount = parsed.length - unique.length
+
+      setPreview(unique)
       setSkipped(skippedCount)
+
+      if (unique.length === 0) {
+        setError(`All ${parsed.length} transactions already exist — nothing new to import.`)
+      } else if (dupeCount > 0) {
+        setSkipped(skippedCount + dupeCount)
+      }
     } catch {
       setError('Failed to read the file. Make sure it is a valid CSV.')
     }
@@ -74,7 +91,7 @@ export default function Import({ store }: Props) {
   function handleImport() {
     const toImport: Omit<Transaction, 'id'>[] = preview.map((r) => ({ ...r, notes: '' }))
     importTransactions(toImport)
-    setImported(true)
+    setImportResult({ imported: preview.length, dupes: skipped })
     setPreview([])
   }
 
@@ -82,12 +99,15 @@ export default function Import({ store }: Props) {
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-2">Import CSV</h1>
       <p className="text-gray-400 text-sm mb-6">
-        Upload your bank's CSV export. Transactions are detected automatically.
+        Upload your bank's CSV export. Duplicate transactions are automatically skipped.
       </p>
 
-      {imported && (
+      {importResult && (
         <div className="mb-4 bg-green-900/30 border border-green-700 rounded-lg px-4 py-3 text-green-400 text-sm">
-          Transactions imported successfully!
+          Imported {importResult.imported} transaction{importResult.imported !== 1 ? 's' : ''}.
+          {importResult.dupes > 0 && (
+            <span className="text-gray-400 ml-1">({importResult.dupes} duplicates skipped)</span>
+          )}
         </div>
       )}
       {error && (
@@ -107,9 +127,9 @@ export default function Import({ store }: Props) {
         <div className="mt-6 bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
             <div>
-              <span className="text-sm font-medium">{preview.length} transactions found</span>
+              <span className="text-sm font-medium">{preview.length} new transactions</span>
               {skipped > 0 && (
-                <span className="text-xs text-gray-500 ml-2">({skipped} rows skipped)</span>
+                <span className="text-xs text-gray-500 ml-2">({skipped} duplicates/blank rows skipped)</span>
               )}
             </div>
             <button
