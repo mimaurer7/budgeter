@@ -129,6 +129,14 @@ export function useAppStore() {
     [data, save]
   )
 
+  const deleteCategory = useCallback(
+    (id: string) => {
+      const next = { ...data, categories: data.categories.filter((c) => c.id !== id) }
+      save(next)
+    },
+    [data, save]
+  )
+
   const toggleCategoryVisibility = useCallback(
     (id: string) => {
       const next = {
@@ -196,6 +204,7 @@ export function useAppStore() {
     upsertBudgetGoal,
     deleteBudgetGoal,
     addCategory,
+    deleteCategory,
     toggleCategoryVisibility,
     importTransactions,
     setMonthlyIncome,

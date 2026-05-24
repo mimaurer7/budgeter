@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function Budget({ store }: Props) {
-  const { data, upsertBudgetGoal, deleteBudgetGoal, setMonthlyIncome, addCategory, toggleCategoryVisibility, copyBudgetFromLastMonth, updateTransaction } = store
+  const { data, upsertBudgetGoal, deleteBudgetGoal, setMonthlyIncome, addCategory, deleteCategory, toggleCategoryVisibility, copyBudgetFromLastMonth, updateTransaction } = store
   const [month, setMonth] = useState(currentMonth())
   const [editingIncome, setEditingIncome] = useState(false)
   const [incomeInput, setIncomeInput] = useState('')
@@ -16,6 +16,7 @@ export default function Budget({ store }: Props) {
   const [showManage, setShowManage] = useState(false)
   const [newCatName, setNewCatName] = useState('')
   const [newCatColor, setNewCatColor] = useState('#6366f1')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
 
   const actualIncome = useMemo(() =>
@@ -142,23 +143,48 @@ export default function Budget({ store }: Props) {
                 {allManageCategories.map((cat) => (
                   <div key={cat.id} className="flex items-center justify-between py-1.5 px-3 rounded-lg"
                     style={{ background: '#0e0e18' }}>
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <span className="w-3 h-3 rounded-full shrink-0" style={{ background: cat.color }} />
-                      <span className="text-sm" style={{ color: cat.hidden ? '#3a3a5a' : '#c0c0e0' }}>{cat.name}</span>
+                      <span className="text-sm truncate" style={{ color: cat.hidden ? '#3a3a5a' : '#c0c0e0' }}>{cat.name}</span>
                       {cat.custom && (
-                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: '#1e1e3a', color: '#6366f1', fontSize: '10px' }}>custom</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded shrink-0" style={{ background: '#1e1e3a', color: '#6366f1', fontSize: '10px' }}>custom</span>
                       )}
                     </div>
-                    <button
-                      onClick={() => toggleCategoryVisibility(cat.id)}
-                      className="text-xs px-2 py-1 rounded-lg transition-colors"
-                      style={{
-                        background: cat.hidden ? '#1a1a2e' : '#1a2a1a',
-                        color: cat.hidden ? '#4a4a6a' : '#22c55e',
-                        border: `1px solid ${cat.hidden ? '#2a2a3e' : '#166534'}`
-                      }}>
-                      {cat.hidden ? 'Hidden' : 'Visible'}
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      {confirmDeleteId === cat.id ? (
+                        <>
+                          <span className="text-xs" style={{ color: '#f87171' }}>Delete?</span>
+                          <button onClick={() => { deleteCategory(cat.id); setConfirmDeleteId(null) }}
+                            className="text-xs px-2 py-1 rounded-lg"
+                            style={{ background: '#7f1d1d', color: '#fca5a5', border: '1px solid #ef4444' }}>Yes</button>
+                          <button onClick={() => setConfirmDeleteId(null)}
+                            className="text-xs px-2 py-1 rounded-lg"
+                            style={{ background: '#1a1a2e', color: '#6a6a8a', border: '1px solid #2a2a3e' }}>No</button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => toggleCategoryVisibility(cat.id)}
+                            className="text-xs px-2 py-1 rounded-lg transition-colors"
+                            style={{
+                              background: cat.hidden ? '#1a1a2e' : '#1a2a1a',
+                              color: cat.hidden ? '#4a4a6a' : '#22c55e',
+                              border: `1px solid ${cat.hidden ? '#2a2a3e' : '#166534'}`
+                            }}>
+                            {cat.hidden ? 'Hidden' : 'Visible'}
+                          </button>
+                          {cat.custom && (
+                            <button onClick={() => setConfirmDeleteId(cat.id)}
+                              className="text-xs px-2 py-1 rounded-lg transition-colors"
+                              style={{ background: '#1a1a2e', color: '#6a3a3a', border: '1px solid #2a1a1a' }}
+                              onMouseEnter={e => ((e.target as HTMLElement).style.color = '#ef4444')}
+                              onMouseLeave={e => ((e.target as HTMLElement).style.color = '#6a3a3a')}>
+                              Delete
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

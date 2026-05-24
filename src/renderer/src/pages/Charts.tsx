@@ -12,6 +12,7 @@ interface Props {
 }
 
 const CHART_STYLE = { backgroundColor: '#0d0d1a', border: '1px solid #1e1e2e', borderRadius: 10, padding: '8px 12px', fontSize: 12, color: '#d0d0f0' }
+const CURSOR_STYLE = { fill: 'rgba(255,255,255,0.04)' }
 const AXIS_STYLE = { fill: '#4a4a6a', fontSize: 11 }
 const GRID_COLOR = '#1a1a2e'
 
@@ -109,7 +110,7 @@ export default function Charts({ store }: Props) {
                     formatter={(v: number, name: string) => [formatCurrency(v), name]}
                     contentStyle={CHART_STYLE}
                     labelStyle={{ color: '#a0a0c0' }}
-                    itemStyle={{ color: '#d0d0f0' }}
+                    itemStyle={{ color: '#d0d0f0' }} cursor={CURSOR_STYLE}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -142,7 +143,7 @@ export default function Charts({ store }: Props) {
                 <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
                 <XAxis dataKey="category" tick={AXIS_STYLE} />
                 <YAxis tick={AXIS_STYLE} tickFormatter={(v) => `$${v}`} />
-                <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: '#d0d0f0' }} />
+                <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: '#d0d0f0' }} cursor={CURSOR_STYLE} />
                 <Legend wrapperStyle={{ fontSize: 12, color: '#6a6a8a' }} />
                 <Bar dataKey="Budget" fill="#4f46e5" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Spent" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -163,7 +164,7 @@ export default function Charts({ store }: Props) {
               <CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} />
               <XAxis dataKey="month" tick={AXIS_STYLE} />
               <YAxis tick={AXIS_STYLE} tickFormatter={(v) => `$${v}`} />
-              <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: '#d0d0f0' }} />
+              <Tooltip formatter={(v: number, name: string) => [formatCurrency(v), name]} contentStyle={CHART_STYLE} itemStyle={{ color: '#d0d0f0' }} cursor={CURSOR_STYLE} />
               <Legend wrapperStyle={{ fontSize: 12, color: '#6a6a8a' }} />
               <Line type="monotone" dataKey="Income" stroke="#22c55e" strokeWidth={2} dot={false} />
               <Line type="monotone" dataKey="Expenses" stroke="#ef4444" strokeWidth={2} dot={false} />
@@ -188,7 +189,7 @@ export default function Charts({ store }: Props) {
                 <Tooltip
                   formatter={(v: number) => [`${v}%`, 'Savings Rate']}
                   contentStyle={CHART_STYLE}
-                  itemStyle={{ color: '#d0d0f0' }}
+                  itemStyle={{ color: '#d0d0f0' }} cursor={CURSOR_STYLE}
                 />
                 <ReferenceLine y={0} stroke="#3a3a5a" strokeDasharray="4 4" />
                 <Bar dataKey="Savings Rate" radius={[4, 4, 0, 0]}
@@ -230,7 +231,7 @@ export default function Charts({ store }: Props) {
                 <Tooltip
                   formatter={(v: number) => [formatCurrency(v), 'Amount']}
                   contentStyle={CHART_STYLE}
-                  itemStyle={{ color: '#d0d0f0' }}
+                  itemStyle={{ color: '#d0d0f0' }} cursor={CURSOR_STYLE}
                 />
                 <Bar dataKey="amount" fill="#6366f1" radius={[0, 4, 4, 0]} />
               </BarChart>
