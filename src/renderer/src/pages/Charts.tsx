@@ -57,15 +57,22 @@ export default function Charts({ store }: Props) {
   }, [data, month, transferCats])
 
   const trendData = useMemo(() => {
-    const months: Record<string, { income: number; expenses: number; saved: number }> = {}
+    const months: Record<string, { income: number; expenses: number; saved: number; withdrawn: number }> = {}
     data.transactions
-      .filter((t) => !transferCats.has(t.category))
       .forEach((t) => {
         const m = monthKey(t.date)
-        if (!months[m]) months[m] = { income: 0, expenses: 0, saved: 0 }
-        if (t.type === 'income') months[m].income += t.amount
-        else if (savingsCats.has(t.category)) months[m].saved += t.amount
-        else months[m].expenses += t.amount
+        if (!months[m]) months[m] = { income: 0, expenses: 0, saved: 0, withdrawn: 0 }
+        if (transferCats.has(t.category)) {
+          // Savings Withdrawal (income type) counts as a negative savings event
+          if (t.type === 'income') months[m].withdrawn += t.amount
+          // All other transfers ignored
+        } else if (t.type === 'income') {
+          months[m].income += t.amount
+        } else if (savingsCats.has(t.category)) {
+          months[m].saved += t.amount
+        } else {
+          months[m].expenses += t.amount
+        }
       })
     return Object.entries(months)
       .sort((a, b) => a[0].localeCompare(b[0]))
@@ -75,7 +82,7 @@ export default function Charts({ store }: Props) {
         Income: v.income,
         Expenses: v.expenses,
         Saved: v.saved,
-        'Savings Rate': v.income > 0 ? Math.round((v.saved / v.income) * 100) : 0
+        'Savings Rate': v.income > 0 ? Math.round(((v.saved - v.withdrawn) / v.income) * 100) : 0
       }))
   }, [data, transferCats, savingsCats])
 
