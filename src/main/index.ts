@@ -1,5 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
-import { join } from 'path'
+import { join, dirname } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import fs from 'fs'
 
@@ -19,6 +19,7 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    if (is.dev) mainWindow.webContents.openDevTools()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -54,9 +55,11 @@ app.whenReady().then(() => {
   // IPC: write data file
   ipcMain.handle('write-data', async (_, filePath: string, data: unknown) => {
     try {
+      fs.mkdirSync(dirname(filePath), { recursive: true })
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8')
       return { success: true }
     } catch (err) {
+      console.error('[write-data] failed:', filePath, err)
       return { success: false, error: String(err) }
     }
   })

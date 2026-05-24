@@ -64,7 +64,9 @@ export function useAppStore() {
   const save = useCallback(
     async (next: AppData) => {
       setData(next)
-      await window.api.writeData(dataPath, next)
+      if (!dataPath) return
+      const result = await window.api.writeData(dataPath, next)
+      if (!result?.success) console.error('Save failed:', result?.error)
     },
     [dataPath]
   )
