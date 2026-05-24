@@ -19,6 +19,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-education',    name: 'Education',        color: '#a78bfa' },
   { id: 'cat-kids',         name: 'Kids',             color: '#fb923c' },
   { id: 'cat-pets',         name: 'Pets',             color: '#fbbf24' },
+  { id: 'cat-transfer',     name: 'Transfer',         color: '#94a3b8', transfer: true },
   { id: 'cat-savings',      name: 'Savings',          color: '#14b8a6' },
   { id: 'cat-emergency',    name: 'Emergency Fund',   color: '#2dd4bf' },
   { id: 'cat-investments',  name: 'Investments',      color: '#34d399' },
@@ -78,8 +79,10 @@ export function guessCategory(description: string): string {
   // Income — check before utilities so "dte ... payroll" hits here
   if (/payroll|direct dep|active payroll|salary|paycheck/.test(d)) return 'Income'
   if (/^external deposit|^deposit/.test(d) && !/transfer/.test(d)) return 'Income'
-  // Savings / transfers
-  if (/transfer|savings|zelle|venmo|paypal|cash.?app/.test(d)) return 'Savings'
+  // Internal transfers — excluded from all calculations
+  if (/\btransfer\b|zelle|venmo|paypal|cash.?app/.test(d)) return 'Transfer'
+  // Intentional savings budget item
+  if (/\bsavings\b/.test(d)) return 'Savings'
   // Groceries (specific stores before general Food & Dining)
   if (/kroger|meijer|aldi|trader.?joe|whole.?foods|publix|safeway|wegmans|sprouts/.test(d)) return 'Groceries'
   // Food & Dining

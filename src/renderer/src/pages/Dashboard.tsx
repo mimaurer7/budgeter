@@ -27,8 +27,14 @@ export default function Dashboard({ store }: Props) {
     return isNaN(d.getTime()) ? null : d.toLocaleString('en-US', { month: 'short', year: 'numeric' })
   }, [data.transactions])
 
+  const transferCats = useMemo(() =>
+    new Set(data.categories.filter((c) => c.transfer).map((c) => c.name)),
+    [data.categories]
+  )
+
   const monthStats = useMemo(() => {
-    const txns = data.transactions.filter((t) => monthKey(t.date) === activeMonth)
+    const txns = data.transactions.filter((t) =>
+      monthKey(t.date) === activeMonth && !transferCats.has(t.category))
     const income = txns.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
     const expenses = txns.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
     const byCategory: Record<string, number> = {}
@@ -36,28 +42,31 @@ export default function Dashboard({ store }: Props) {
       byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount
     })
     return { income, expenses, net: income - expenses, byCategory }
-  }, [data.transactions, activeMonth])
+  }, [data.transactions, activeMonth, transferCats])
 
   const allTime = useMemo(() => {
-    const income = data.transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-    const expenses = data.transactions.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-    const expenseCount = data.transactions.filter((t) => t.type === 'expense').length
-    const incomeCount = data.transactions.filter((t) => t.type === 'income').length
+    const real = data.transactions.filter((t) => !transferCats.has(t.category))
+    const income = real.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+    const expenses = real.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    const expenseCount = real.filter((t) => t.type === 'expense').length
+    const incomeCount = real.filter((t) => t.type === 'income').length
     return { income, expenses, net: income - expenses, expenseCount, incomeCount }
-  }, [data.transactions])
+  }, [data.transactions, transferCats])
 
   const yearStats = useMemo(() => {
     const map: Record<string, { income: number; expenses: number; txCount: number }> = {}
-    data.transactions.forEach((t) => {
-      const yr = t.date.slice(0, 4)
-      if (!map[yr]) map[yr] = { income: 0, expenses: 0, txCount: 0 }
-      if (t.type === 'income') map[yr].income += t.amount
-      else { map[yr].expenses += t.amount; map[yr].txCount++ }
-    })
+    data.transactions
+      .filter((t) => !transferCats.has(t.category))
+      .forEach((t) => {
+        const yr = t.date.slice(0, 4)
+        if (!map[yr]) map[yr] = { income: 0, expenses: 0, txCount: 0 }
+        if (t.type === 'income') map[yr].income += t.amount
+        else { map[yr].expenses += t.amount; map[yr].txCount++ }
+      })
     return Object.entries(map)
       .sort((a, b) => b[0].localeCompare(a[0]))
       .map(([year, v]) => ({ year, ...v, net: v.income - v.expenses }))
-  }, [data.transactions])
+  }, [data.transactions, transferCats])
 
   const drillYearTxns = useMemo(() => {
     if (!drillYear) return []

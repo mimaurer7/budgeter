@@ -22,38 +22,45 @@ export default function Charts({ store }: Props) {
   const [drillMonth, setDrillMonth] = useState<string | null>(null)
   const [drillMerchant, setDrillMerchant] = useState<string | null>(null)
 
+  const transferCats = useMemo(() =>
+    new Set(data.categories.filter((c) => c.transfer).map((c) => c.name)),
+    [data.categories]
+  )
+
   const pieData = useMemo(() => {
     const byCategory: Record<string, number> = {}
     data.transactions
-      .filter((t) => t.type === 'expense' && monthKey(t.date) === month)
+      .filter((t) => t.type === 'expense' && monthKey(t.date) === month && !transferCats.has(t.category))
       .forEach((t) => { byCategory[t.category] = (byCategory[t.category] ?? 0) + t.amount })
     return Object.entries(byCategory)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-  }, [data, month])
+  }, [data, month, transferCats])
 
   const budgetBarData = useMemo(() => {
     const goals = data.budgetGoals.filter((g) => g.month === month)
     if (goals.length === 0) return []
     const spendByCategory: Record<string, number> = {}
     data.transactions
-      .filter((t) => t.type === 'expense' && monthKey(t.date) === month)
+      .filter((t) => t.type === 'expense' && monthKey(t.date) === month && !transferCats.has(t.category))
       .forEach((t) => { spendByCategory[t.category] = (spendByCategory[t.category] ?? 0) + t.amount })
     return goals.map((g) => ({
       category: g.category,
       Budget: g.monthlyLimit,
       Spent: spendByCategory[g.category] ?? 0
     }))
-  }, [data, month])
+  }, [data, month, transferCats])
 
   const trendData = useMemo(() => {
     const months: Record<string, { income: number; expenses: number }> = {}
-    data.transactions.forEach((t) => {
-      const m = monthKey(t.date)
-      if (!months[m]) months[m] = { income: 0, expenses: 0 }
-      if (t.type === 'income') months[m].income += t.amount
-      else months[m].expenses += t.amount
-    })
+    data.transactions
+      .filter((t) => !transferCats.has(t.category))
+      .forEach((t) => {
+        const m = monthKey(t.date)
+        if (!months[m]) months[m] = { income: 0, expenses: 0 }
+        if (t.type === 'income') months[m].income += t.amount
+        else months[m].expenses += t.amount
+      })
     return Object.entries(months)
       .sort((a, b) => a[0].localeCompare(b[0]))
       .slice(-6)
@@ -63,18 +70,18 @@ export default function Charts({ store }: Props) {
         Expenses: v.expenses,
         'Savings Rate': v.income > 0 ? Math.round(((v.income - v.expenses) / v.income) * 100) : 0
       }))
-  }, [data])
+  }, [data, transferCats])
 
   const topMerchants = useMemo(() => {
     const byDesc: Record<string, number> = {}
     data.transactions
-      .filter((t) => t.type === 'expense' && monthKey(t.date) === month)
+      .filter((t) => t.type === 'expense' && monthKey(t.date) === month && !transferCats.has(t.category))
       .forEach((t) => { byDesc[t.description] = (byDesc[t.description] ?? 0) + t.amount })
     return Object.entries(byDesc)
       .map(([name, amount]) => ({ name, amount }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 10)
-  }, [data, month])
+  }, [data, month, transferCats])
 
   // Drill-down: all transactions for a selected month
   const drillMonthTxns = useMemo(() => {

@@ -19,11 +19,16 @@ export default function Budget({ store }: Props) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
 
+  const transferCats = useMemo(() =>
+    new Set(data.categories.filter((c) => c.transfer).map((c) => c.name)),
+    [data.categories]
+  )
+
   const actualIncome = useMemo(() =>
     data.transactions
-      .filter((t) => monthKey(t.date) === month && t.type === 'income')
+      .filter((t) => monthKey(t.date) === month && t.type === 'income' && !transferCats.has(t.category))
       .reduce((s, t) => s + t.amount, 0),
-    [data.transactions, month]
+    [data.transactions, month, transferCats]
   )
 
   const plannedIncome = data.monthlyIncome[month] ?? actualIncome
@@ -31,10 +36,10 @@ export default function Budget({ store }: Props) {
   const spentByCategory = useMemo(() => {
     const map: Record<string, number> = {}
     data.transactions
-      .filter((t) => monthKey(t.date) === month && t.type === 'expense')
+      .filter((t) => monthKey(t.date) === month && t.type === 'expense' && !transferCats.has(t.category))
       .forEach((t) => { map[t.category] = (map[t.category] ?? 0) + t.amount })
     return map
-  }, [data.transactions, month])
+  }, [data.transactions, month, transferCats])
 
   const txnsByCategory = useMemo(() => {
     const map: Record<string, typeof data.transactions> = {}
@@ -89,7 +94,7 @@ export default function Budget({ store }: Props) {
     setExpandedCategory(prev => prev === catName ? null : catName)
   }
 
-  const visibleCategories = data.categories.filter((c) => c.name !== 'Income' && !c.hidden)
+  const visibleCategories = data.categories.filter((c) => c.name !== 'Income' && !c.hidden && !c.transfer)
   const allManageCategories = data.categories.filter((c) => c.name !== 'Income')
   const allCategoryNames = data.categories.map((c) => c.name)
   const uncategorizedCount = (txnsByCategory['Uncategorized'] ?? []).filter(t => t.type === 'expense').length

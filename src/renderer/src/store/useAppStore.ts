@@ -32,6 +32,8 @@ export function useAppStore() {
             hidden: false,
             custom: false,
             ...c,
+            // Ensure transfer flag is set correctly on the Transfer category
+            transfer: c.name === 'Transfer' ? true : (c.transfer ?? false),
           })),
           ...newDefaults,
         ]
@@ -41,13 +43,15 @@ export function useAppStore() {
           ...saved,
           savingsBalance: saved.savingsBalance ?? 0,
           categories: mergedCategories,
-          transactions: (saved.transactions ?? []).map((t) => ({
-            ...t,
-            date: normalizeDate(t.date),
-            category: (t.category === 'Other' || t.category === 'Uncategorized')
-              ? guessCategory(t.description)
-              : t.category
-          }))
+          transactions: (saved.transactions ?? []).map((t) => {
+            let category = t.category
+            // Re-run guesser on uncategorized and on old Savings transactions
+            // that were likely internal transfers (now get routed to Transfer)
+            if (category === 'Other' || category === 'Uncategorized' || category === 'Savings') {
+              category = guessCategory(t.description)
+            }
+            return { ...t, date: normalizeDate(t.date), category }
+          })
         }
         setData(migrated)
         await window.api.writeData(path, migrated)

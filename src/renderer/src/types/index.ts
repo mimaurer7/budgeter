@@ -24,6 +24,7 @@ export interface Category {
   icon?: string
   hidden?: boolean
   custom?: boolean
+  transfer?: boolean  // excluded from all income/expense calculations
 }
 
 export interface AppData {
