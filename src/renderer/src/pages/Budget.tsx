@@ -14,6 +14,7 @@ export default function Budget({ store }: Props) {
   const [editingGoal, setEditingGoal] = useState<string | null>(null)
   const [goalInput, setGoalInput] = useState('')
   const [showManage, setShowManage] = useState(false)
+  const [showTransferReview, setShowTransferReview] = useState(false)
   const [newCatName, setNewCatName] = useState('')
   const [newCatColor, setNewCatColor] = useState('#6366f1')
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -98,6 +99,13 @@ export default function Budget({ store }: Props) {
   const allManageCategories = data.categories.filter((c) => c.name !== 'Income')
   const allCategoryNames = data.categories.map((c) => c.name)
   const uncategorizedCount = (txnsByCategory['Uncategorized'] ?? []).filter(t => t.type === 'expense').length
+
+  const transferTxnsThisMonth = useMemo(() =>
+    data.transactions
+      .filter((t) => monthKey(t.date) === month && transferCats.has(t.category))
+      .sort((a, b) => b.date.localeCompare(a.date)),
+    [data.transactions, month, transferCats]
+  )
 
   const monthLabel = new Date(month + '-02').toLocaleString('en-US', { month: 'long', year: 'numeric' })
 
@@ -256,6 +264,55 @@ export default function Budget({ store }: Props) {
           <span className="text-xs px-3 py-1 rounded-lg" style={{ background: '#fef3c7', color: '#d97706' }}>
             Review →
           </span>
+        </div>
+      )}
+
+      {/* Transfer review banner */}
+      {transferTxnsThisMonth.length > 0 && (
+        <div className="flex items-center justify-between px-5 py-3 rounded-xl mb-4 cursor-pointer"
+          style={{ background: '#eff6ff', border: '1px solid #93c5fd' }}
+          onClick={() => setShowTransferReview((v) => !v)}>
+          <div className="flex items-center gap-3">
+            <span style={{ color: '#2563eb' }}>↔</span>
+            <span className="text-sm font-medium" style={{ color: '#1e40af' }}>
+              {transferTxnsThisMonth.length} transfer transaction{transferTxnsThisMonth.length !== 1 ? 's' : ''} this month — reassign to budget categories
+            </span>
+          </div>
+          <span className="text-xs px-3 py-1 rounded-lg" style={{ background: '#dbeafe', color: '#2563eb' }}>
+            {showTransferReview ? 'Hide ▲' : 'Review →'}
+          </span>
+        </div>
+      )}
+
+      {showTransferReview && transferTxnsThisMonth.length > 0 && (
+        <div className="card card-glow overflow-hidden mb-6">
+          <div className="px-5 py-3 text-xs font-semibold uppercase tracking-wide"
+            style={{ borderBottom: '1px solid #eae9f5', color: '#8a89a8', background: '#f8f8ff' }}>
+            Transfer Transactions — click a category to reassign
+          </div>
+          {transferTxnsThisMonth.map((txn, ti) => {
+            const d = new Date(txn.date + 'T00:00:00')
+            const dateLabel = isNaN(d.getTime()) ? txn.date : d.toLocaleString('en-US', { month: 'short', day: 'numeric' })
+            return (
+              <div key={txn.id} className="flex items-center gap-4 px-5 py-3"
+                style={{ borderBottom: ti < transferTxnsThisMonth.length - 1 ? '1px solid #f0eff5' : 'none' }}>
+                <span className="text-xs w-14 shrink-0" style={{ color: '#aeadcc' }}>{dateLabel}</span>
+                <span className="text-sm flex-1 truncate" style={{ color: '#5a5978' }}>{txn.description}</span>
+                <span className="text-sm font-medium shrink-0 w-24 text-right"
+                  style={{ color: txn.type === 'income' ? '#16a34a' : '#5a5978' }}>
+                  {txn.type === 'income' ? '+' : ''}{formatCurrency(txn.amount)}
+                </span>
+                <select value={txn.category}
+                  onChange={(e) => updateTransaction(txn.id, { category: e.target.value })}
+                  className="text-xs px-2 py-1 rounded-lg focus:outline-none shrink-0"
+                  style={{ background: '#f5f4f8', border: '1px solid #d5d4e8', color: '#3c3b58', maxWidth: '160px' }}>
+                  {allCategoryNames.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            )
+          })}
         </div>
       )}
 
